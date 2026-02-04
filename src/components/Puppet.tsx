@@ -140,40 +140,42 @@ export default function Puppet({ stringControls, controlBarRef, onStringPull }: 
     }
 
     // Left Arm: pulled up by left hand string, or sagged by gravity
+    // With the arm rotated 90° around Z, X rotation raises/lowers, Y rotation swings forward/back
     if (leftUpperArmRef.current && stringControls.leftHand !== undefined) {
       const pull = stringControls.leftHand
-      // When pulled: raise arm, when relaxed: let gravity pull it down
-      leftUpperArmRef.current.rotation.x = -pull * 1.2 + (1 - pull) * 0.8 // Raise when pulled, sag when relaxed
-      leftUpperArmRef.current.rotation.z = pull * 0.5 // Rotate arm outward when pulled
+      // When pulled: raise arm (rotate around Y axis to lift), when relaxed: let gravity pull it down
+      leftUpperArmRef.current.rotation.y = -pull * 1.2 + (1 - pull) * 0.8 // Raise when pulled, sag when relaxed
+      leftUpperArmRef.current.rotation.x = pull * 0.5 // Rotate arm outward when pulled
     } else if (leftUpperArmRef.current) {
       // Gravity sag when no string control
-      leftUpperArmRef.current.rotation.x = 0.8 // Arm hangs down
-      leftUpperArmRef.current.rotation.z = 0
+      leftUpperArmRef.current.rotation.y = 0.8 // Arm hangs down
+      leftUpperArmRef.current.rotation.x = 0
     }
     // Left Elbow: bends when arm is raised, or straightens when relaxed
     if (leftForearmRef.current && stringControls.leftHand !== undefined) {
       const pull = stringControls.leftHand
-      leftForearmRef.current.rotation.x = -pull * 0.8 + (1 - pull) * 0.3 // Bend when pulled, slight bend when relaxed
+      leftForearmRef.current.rotation.y = -pull * 0.8 + (1 - pull) * 0.3 // Bend when pulled, slight bend when relaxed
     } else if (leftForearmRef.current) {
-      leftForearmRef.current.rotation.x = 0.3 // Slight natural bend
+      leftForearmRef.current.rotation.y = 0.3 // Slight natural bend
     }
 
     // Right Arm: pulled up by right hand string, or sagged by gravity
+    // With the arm rotated -90° around Z, X rotation raises/lowers, Y rotation swings forward/back
     if (rightUpperArmRef.current && stringControls.rightHand !== undefined) {
       const pull = stringControls.rightHand
-      rightUpperArmRef.current.rotation.x = -pull * 1.2 + (1 - pull) * 0.8 // Raise when pulled, sag when relaxed
-      rightUpperArmRef.current.rotation.z = -pull * 0.5 // Rotate arm outward when pulled
+      rightUpperArmRef.current.rotation.y = pull * 1.2 - (1 - pull) * 0.8 // Raise when pulled, sag when relaxed (inverted for right)
+      rightUpperArmRef.current.rotation.x = -pull * 0.5 // Rotate arm outward when pulled
     } else if (rightUpperArmRef.current) {
       // Gravity sag when no string control
-      rightUpperArmRef.current.rotation.x = 0.8 // Arm hangs down
-      rightUpperArmRef.current.rotation.z = 0
+      rightUpperArmRef.current.rotation.y = -0.8 // Arm hangs down
+      rightUpperArmRef.current.rotation.x = 0
     }
     // Right Elbow: bends when arm is raised, or straightens when relaxed
     if (rightForearmRef.current && stringControls.rightHand !== undefined) {
       const pull = stringControls.rightHand
-      rightForearmRef.current.rotation.x = -pull * 0.8 + (1 - pull) * 0.3 // Bend when pulled, slight bend when relaxed
+      rightForearmRef.current.rotation.y = pull * 0.8 - (1 - pull) * 0.3 // Bend when pulled, slight bend when relaxed (inverted for right)
     } else if (rightForearmRef.current) {
-      rightForearmRef.current.rotation.x = 0.3 // Slight natural bend
+      rightForearmRef.current.rotation.y = -0.3 // Slight natural bend
     }
 
     // Left Leg: pulled up by left foot string, or hangs down by gravity
@@ -251,8 +253,8 @@ export default function Puppet({ stringControls, controlBarRef, onStringPull }: 
             <sphereGeometry args={[0.04, 8, 8]} />
             <meshStandardMaterial color="#fdbcb4" />
           </mesh>
-          {/* Upper arm */}
-          <mesh position={[-0.09, 0, 0]} castShadow>
+          {/* Upper arm - cylinder extends horizontally (leftward along -X) */}
+          <mesh position={[-0.09, 0, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
             <cylinderGeometry args={[0.03, 0.03, 0.18, 8]} />
             <meshStandardMaterial color="#fdbcb4" />
           </mesh>
@@ -263,7 +265,8 @@ export default function Puppet({ stringControls, controlBarRef, onStringPull }: 
               <sphereGeometry args={[0.03, 8, 8]} />
               <meshStandardMaterial color="#fdbcb4" />
             </mesh>
-            <mesh position={[-0.09, 0, 0]} castShadow>
+            {/* Forearm - cylinder extends horizontally (leftward along -X) */}
+            <mesh position={[-0.09, 0, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
               <cylinderGeometry args={[0.025, 0.025, 0.18, 8]} />
               <meshStandardMaterial color="#fdbcb4" />
             </mesh>
@@ -282,8 +285,8 @@ export default function Puppet({ stringControls, controlBarRef, onStringPull }: 
             <sphereGeometry args={[0.04, 8, 8]} />
             <meshStandardMaterial color="#fdbcb4" />
           </mesh>
-          {/* Upper arm */}
-          <mesh position={[0.09, 0, 0]} castShadow>
+          {/* Upper arm - cylinder extends horizontally (rightward along +X) */}
+          <mesh position={[0.09, 0, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
             <cylinderGeometry args={[0.03, 0.03, 0.18, 8]} />
             <meshStandardMaterial color="#fdbcb4" />
           </mesh>
@@ -294,7 +297,8 @@ export default function Puppet({ stringControls, controlBarRef, onStringPull }: 
               <sphereGeometry args={[0.03, 8, 8]} />
               <meshStandardMaterial color="#fdbcb4" />
             </mesh>
-            <mesh position={[0.09, 0, 0]} castShadow>
+            {/* Forearm - cylinder extends horizontally (rightward along +X) */}
+            <mesh position={[0.09, 0, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
               <cylinderGeometry args={[0.025, 0.025, 0.18, 8]} />
               <meshStandardMaterial color="#fdbcb4" />
             </mesh>
