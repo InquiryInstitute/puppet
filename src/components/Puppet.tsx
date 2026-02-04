@@ -36,6 +36,7 @@ export default function Puppet({ stringControls, controlBarRef, onStringPull }: 
   const puppetBaseYRef = useRef(0.625)
   const puppetBaseXRef = useRef(0) // Horizontal position constraint
   const puppetBaseZRef = useRef(0) // Depth position constraint
+  const kneeBendRef = useRef({ left: 0, right: 0 }) // Track knee bending from ground collision
   const MASS = 2.0 // Puppet mass (kg) - makes it heavier, harder to lift
   const GRAVITY = -9.81 * 0.15 // Gravity force (m/s²) - always constant
   const DAMPING = 0.92 // Air resistance (stronger damping = more mass effect)
@@ -79,13 +80,50 @@ export default function Puppet({ stringControls, controlBarRef, onStringPull }: 
     puppetBaseXRef.current += velocityRef.current.x * delta
     puppetBaseZRef.current += velocityRef.current.z * delta
     
-    // Floor collision - puppet can't fall below stage
-    // Feet are at y = -0.625 relative to torso center
-    // Stage is at y=0, so puppet base (torso center) must be at least 0.625 above stage
-    const floorY = 0.625 // Minimum height so feet touch stage
-    if (puppetBaseYRef.current < floorY) {
-      puppetBaseYRef.current = floorY
-      velocityRef.current.y = Math.max(0, velocityRef.current.y) // Can't have downward velocity when on ground
+    // Rigid stage collision - calculate actual foot positions and check collision
+    const STAGE_Y = 0 // Stage surface is at y=0
+    const FOOT_BOTTOM_OFFSET = -0.625 // Feet bottom is 0.625 below torso center
+    
+    // Calculate actual foot bottom positions in world space
+    const leftFootWorldY = puppetBaseYRef.current + FOOT_BOTTOM_OFFSET
+    const rightFootWorldY = puppetBaseYRef.current + FOOT_BOTTOM_OFFSET
+    
+    // Check if feet are hitting the stage
+    const leftFootHitting = leftFootWorldY <= STAGE_Y
+    const rightFootHitting = rightFootWorldY <= STAGE_Y
+    const anyFootHitting = leftFootHitting || rightFootHitting
+    
+    // Rigid collision - stop falling when feet hit stage
+    if (anyFootHitting) {
+      // Calculate how much the feet are below the stage
+      const penetration = Math.min(
+        STAGE_Y - leftFootWorldY,
+        STAGE_Y - rightFootWorldY
+      )
+      
+      // Push puppet up to prevent penetration
+      puppetBaseYRef.current += penetration
+      
+      // Stop downward velocity when hitting ground
+      if (velocityRef.current.y < 0) {
+        velocityRef.current.y = 0
+      }
+      
+      // Apply knee bending when feet hit the stage
+      // The more the puppet is compressed, the more knees bend
+      const compressionAmount = Math.min(Math.abs(penetration) * 20, 1.0) // Scale penetration to 0-1
+      
+      // Store compression for knee bending (will be used below)
+      if (leftFootHitting) {
+        kneeBendRef.current.left = compressionAmount
+      }
+      if (rightFootHitting) {
+        kneeBendRef.current.right = compressionAmount
+      }
+    } else {
+      // Reset knee bend when feet are off ground
+      kneeBendRef.current.left = 0
+      kneeBendRef.current.right = 0
     }
     
     // Ceiling constraint - puppet can't fly too high (limited by string length)
@@ -180,40 +218,66 @@ export default function Puppet({ stringControls, controlBarRef, onStringPull }: 
       rightForearmRef.current.rotation.y = 0 // Straight when relaxed
     }
 
-    // Left Leg: pulled up by left foot string, or hangs down by gravity
-    if (leftThighRef.current && stringControls.leftFoot !== undefined) {
-      const pull = stringControls.leftFoot
-      leftThighRef.current.rotation.x = pull * 0.8 - (1 - pull) * 0.1 // Lift when pulled, slight forward when relaxed
-      leftThighRef.current.rotation.z = pull * 0.2 // Rotate leg slightly when pulled
-    } else if (leftThighRef.current) {
-      // Gravity: leg hangs straight down
-      leftThighRef.current.rotation.x = -0.1 // Slight forward lean
-      leftThighRef.current.rotation.z = 0
+    // Left Leg: pulled up by left foot string, or hangs down by gravity, or compresses when landing
+    if (leftThighRef.current) {
+      let thighRotationX = -0.1 // Default: slight forward lean
+      let thighRotationZ = 0
+      
+      if (stringControls?.leftFoot !== undefined) {
+        const pull = stringControls.leftFoot
+        thighRotationX = pull * 0.8 - (1 - pull) * 0.1 // Lift when pulled, slight forward when relaxed
+        thighRotationZ = pull * 0.2 // Rotate leg slightly when pulled
+      }
+      
+      // Add compression when foot hits ground (thigh rotates forward more)
+      thighRotationX += kneeBendRef.current.left * 0.3 // Compress thigh when landing
+      
+      leftThighRef.current.rotation.x = thighRotationX
+      leftThighRef.current.rotation.z = thighRotationZ
     }
-    // Left Knee: bends when leg is lifted, or straightens when relaxed
-    if (leftShinRef.current && stringControls.leftFoot !== undefined) {
-      const pull = stringControls.leftFoot
-      leftShinRef.current.rotation.x = pull * 0.6 - (1 - pull) * 0.1 // Bend when pulled, slight bend when relaxed
-    } else if (leftShinRef.current) {
-      leftShinRef.current.rotation.x = -0.1 // Slight natural bend
+    // Left Knee: bends when leg is lifted, or when foot hits ground, or straightens when relaxed
+    if (leftShinRef.current) {
+      let kneeRotation = 0
+      if (stringControls?.leftFoot !== undefined) {
+        const pull = stringControls.leftFoot
+        kneeRotation = pull * 0.6 - (1 - pull) * 0.1 // Bend when pulled, slight bend when relaxed
+      } else {
+        kneeRotation = -0.1 // Slight natural bend
+      }
+      // Add knee bending from ground collision (bend more when landing)
+      kneeRotation += kneeBendRef.current.left * 0.8 // Bend knee when foot hits ground
+      leftShinRef.current.rotation.x = kneeRotation
     }
 
-    // Right Leg: pulled up by right foot string, or hangs down by gravity
-    if (rightThighRef.current && stringControls.rightFoot !== undefined) {
-      const pull = stringControls.rightFoot
-      rightThighRef.current.rotation.x = pull * 0.8 - (1 - pull) * 0.1 // Lift when pulled, slight forward when relaxed
-      rightThighRef.current.rotation.z = -pull * 0.2 // Rotate leg slightly when pulled
-    } else if (rightThighRef.current) {
-      // Gravity: leg hangs straight down
-      rightThighRef.current.rotation.x = -0.1 // Slight forward lean
-      rightThighRef.current.rotation.z = 0
+    // Right Leg: pulled up by right foot string, or hangs down by gravity, or compresses when landing
+    if (rightThighRef.current) {
+      let thighRotationX = -0.1 // Default: slight forward lean
+      let thighRotationZ = 0
+      
+      if (stringControls?.rightFoot !== undefined) {
+        const pull = stringControls.rightFoot
+        thighRotationX = pull * 0.8 - (1 - pull) * 0.1 // Lift when pulled, slight forward when relaxed
+        thighRotationZ = -pull * 0.2 // Rotate leg slightly when pulled
+      }
+      
+      // Add compression when foot hits ground (thigh rotates forward more)
+      thighRotationX += kneeBendRef.current.right * 0.3 // Compress thigh when landing
+      
+      rightThighRef.current.rotation.x = thighRotationX
+      rightThighRef.current.rotation.z = thighRotationZ
     }
-    // Right Knee: bends when leg is lifted, or straightens when relaxed
-    if (rightShinRef.current && stringControls.rightFoot !== undefined) {
-      const pull = stringControls.rightFoot
-      rightShinRef.current.rotation.x = pull * 0.6 - (1 - pull) * 0.1 // Bend when pulled, slight bend when relaxed
-    } else if (rightShinRef.current) {
-      rightShinRef.current.rotation.x = -0.1 // Slight natural bend
+    // Right Knee: bends when leg is lifted, or when foot hits ground, or straightens when relaxed
+    if (rightShinRef.current) {
+      let kneeRotation = 0
+      if (stringControls?.rightFoot !== undefined) {
+        const pull = stringControls.rightFoot
+        kneeRotation = pull * 0.6 - (1 - pull) * 0.1 // Bend when pulled, slight bend when relaxed
+      } else {
+        kneeRotation = -0.1 // Slight natural bend
+      }
+      // Add knee bending from ground collision (bend more when landing)
+      kneeRotation += kneeBendRef.current.right * 0.8 // Bend knee when foot hits ground
+      rightShinRef.current.rotation.x = kneeRotation
     }
   })
 
