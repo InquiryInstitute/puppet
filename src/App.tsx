@@ -60,8 +60,8 @@ function App() {
         <Canvas shadows>
           <PerspectiveCamera 
             makeDefault 
-            position={[0.02, 2.85, 4.67]}
-            rotation={[-0.176, -0.007, -0.002]} // Pitch: -10.1°, Yaw: -0.4°, Roll: -0.1° (converted to radians)
+            position={[-0.08, 1.32, 3.95]}
+            rotation={[0.0471, -0.0227, 0.001745]} // Pitch: 2.7°, Yaw: -1.3°, Roll: 0.1° (converted to radians)
           />
           <ambientLight intensity={0.5} />
           <directionalLight
