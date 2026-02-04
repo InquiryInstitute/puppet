@@ -50,6 +50,18 @@ export default function MarionetteStrings({
     front?: THREE.Vector3
     back?: THREE.Vector3
   }>({})
+  
+  // Store puppet attachment positions to share with debug spheres
+  const puppetPositionsRef = useRef<{
+    head?: THREE.Vector3
+    chest?: THREE.Vector3
+    leftHand?: THREE.Vector3
+    rightHand?: THREE.Vector3
+    leftShoulder?: THREE.Vector3
+    rightShoulder?: THREE.Vector3
+    leftFoot?: THREE.Vector3
+    rightFoot?: THREE.Vector3
+  }>({})
 
   useFrame(() => {
     if (!puppetRef.current) {
@@ -128,6 +140,18 @@ export default function MarionetteStrings({
     const puppetRightFootPos = rightShinRef
       ? getWorldPositionFromRef(rightShinRef, new THREE.Vector3(0, -0.2, 0.05)) // Foot position
       : new THREE.Vector3(0.1, -0.8, 0.05).clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
+    
+    // Store puppet positions for debug spheres to use
+    puppetPositionsRef.current = {
+      head: puppetHeadPos.clone(),
+      chest: puppetChestPos.clone(),
+      leftHand: puppetLeftHandPos.clone(),
+      rightHand: puppetRightHandPos.clone(),
+      leftShoulder: puppetLeftShoulderPos.clone(),
+      rightShoulder: puppetRightShoulderPos.clone(),
+      leftFoot: puppetLeftFootPos.clone(),
+      rightFoot: puppetRightFootPos.clone(),
+    }
 
     // Control bar attachment points (matching smaller crossbar)
     // Coordinate system: X=left/right, Y=up/down, Z=forward/back
@@ -159,60 +183,60 @@ export default function MarionetteStrings({
     }
 
     // All 8 strings from MuJoCo model - connect directly to control bar attachment points
-    // Use the exact same cloned positions as the debug spheres (from ref)
+    // Use the exact same cloned positions as the debug spheres (from refs)
     const stringConfigs = [
       {
         name: 'head',
-        start: puppetHeadPos.clone(),
+        start: puppetPositionsRef.current.head!.clone(), // Use exact same position as debug sphere
         end: controlBarPositionsRef.current.center!.clone(), // Use exact same position as debug sphere
         color: '#ff6b6b',
         visible: true,
       },
       {
         name: 'chest',
-        start: puppetChestPos.clone(),
+        start: puppetPositionsRef.current.chest!.clone(), // Use exact same position as debug sphere
         end: controlBarPositionsRef.current.center!.clone(), // Use exact same position as debug sphere
         color: '#ff8c8c',
         visible: true,
       },
       {
         name: 'leftHand',
-        start: puppetLeftHandPos.clone(),
+        start: puppetPositionsRef.current.leftHand!.clone(), // Use exact same position as debug sphere
         end: controlBarPositionsRef.current.left!.clone(), // Use exact same position as debug sphere
         color: '#4ecdc4',
         visible: true,
       },
       {
         name: 'rightHand',
-        start: puppetRightHandPos.clone(),
+        start: puppetPositionsRef.current.rightHand!.clone(), // Use exact same position as debug sphere
         end: controlBarPositionsRef.current.right!.clone(), // Use exact same position as debug sphere
         color: '#45b7d1',
         visible: true,
       },
       {
         name: 'leftShoulder',
-        start: puppetLeftShoulderPos.clone(),
+        start: puppetPositionsRef.current.leftShoulder!.clone(), // Use exact same position as debug sphere
         end: controlBarPositionsRef.current.front!.clone(), // Use exact same position as debug sphere
         color: '#96ceb4',
         visible: true,
       },
       {
         name: 'rightShoulder',
-        start: puppetRightShoulderPos.clone(),
+        start: puppetPositionsRef.current.rightShoulder!.clone(), // Use exact same position as debug sphere
         end: controlBarPositionsRef.current.back!.clone(), // Use exact same position as debug sphere
         color: '#a8d5ba',
         visible: true,
       },
       {
         name: 'leftFoot',
-        start: puppetLeftFootPos.clone(),
+        start: puppetPositionsRef.current.leftFoot!.clone(), // Use exact same position as debug sphere
         end: controlBarPositionsRef.current.front!.clone(), // Use exact same position as debug sphere
         color: '#ffeaa7',
         visible: true,
       },
       {
         name: 'rightFoot',
-        start: puppetRightFootPos.clone(),
+        start: puppetPositionsRef.current.rightFoot!.clone(), // Use exact same position as debug sphere
         end: controlBarPositionsRef.current.back!.clone(), // Use exact same position as debug sphere
         color: '#fdcb6e',
         visible: true,
@@ -311,6 +335,11 @@ export default function MarionetteStrings({
               transparent={false}
               opacity={1.0}
             />
+            {/* Debug: Show exact start point of string to verify it matches puppet attachment */}
+            <mesh position={[config.start.x, config.start.y, config.start.z]}>
+              <sphereGeometry args={[0.015, 8, 8]} />
+              <meshStandardMaterial color="white" emissive="white" emissiveIntensity={1.0} />
+            </mesh>
             {/* Debug: Show exact end point of string to verify it matches control bar sphere */}
             <mesh position={[config.end.x, config.end.y, config.end.z]}>
               <sphereGeometry args={[0.015, 8, 8]} />
@@ -374,69 +403,57 @@ export default function MarionetteStrings({
           )}
         </>
       )}
-      {/* Debug: Show puppet attachment points */}
-      {puppetRef.current && (() => {
-        const puppetWorldPos = new THREE.Vector3()
-        const puppetWorldQuat = new THREE.Quaternion()
-        puppetRef.current!.getWorldPosition(puppetWorldPos)
-        puppetRef.current!.getWorldQuaternion(puppetWorldQuat)
-        
-        const getWorldPositionFromRef = (ref: React.RefObject<THREE.Group> | undefined, offset: THREE.Vector3): THREE.Vector3 => {
-          if (ref?.current) {
-            const worldPos = new THREE.Vector3()
-            ref.current.getWorldPosition(worldPos)
-            const localOffset = offset.clone().applyQuaternion(ref.current.getWorldQuaternion(new THREE.Quaternion()))
-            return worldPos.add(localOffset)
-          }
-          return offset.clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
-        }
-        
-        const puppetHeadPos = headRef 
-          ? getWorldPositionFromRef(headRef, new THREE.Vector3(0, 0.15, 0))
-          : new THREE.Vector3(0, 0.55, 0).clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
-        const puppetChestPos = new THREE.Vector3(0, 0.2, 0).clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
-        const puppetLeftHandPos = leftForearmRef
-          ? getWorldPositionFromRef(leftForearmRef, new THREE.Vector3(-0.18, 0, 0))
-          : new THREE.Vector3(-0.51, 0.1, 0).clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
-        const puppetRightHandPos = rightForearmRef
-          ? getWorldPositionFromRef(rightForearmRef, new THREE.Vector3(0.18, 0, 0))
-          : new THREE.Vector3(0.51, 0.1, 0).clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
-        const puppetLeftFootPos = leftShinRef
-          ? getWorldPositionFromRef(leftShinRef, new THREE.Vector3(0, -0.2, 0.05))
-          : new THREE.Vector3(-0.1, -0.8, 0.05).clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
-        const puppetRightFootPos = rightShinRef
-          ? getWorldPositionFromRef(rightShinRef, new THREE.Vector3(0, -0.2, 0.05))
-          : new THREE.Vector3(0.1, -0.8, 0.05).clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
-        
-        return (
-          <>
-            <mesh position={[puppetHeadPos.x, puppetHeadPos.y, puppetHeadPos.z]}>
-              <sphereGeometry args={[0.02, 8, 8]} />
-              <meshStandardMaterial color="red" emissive="red" emissiveIntensity={0.5} />
-            </mesh>
-            <mesh position={[puppetChestPos.x, puppetChestPos.y, puppetChestPos.z]}>
+      {/* Debug: Show puppet attachment points - using positions from useFrame */}
+      {puppetPositionsRef.current.head && (
+        <>
+          <mesh position={[puppetPositionsRef.current.head.x, puppetPositionsRef.current.head.y, puppetPositionsRef.current.head.z]}>
+            <sphereGeometry args={[0.02, 8, 8]} />
+            <meshStandardMaterial color="red" emissive="red" emissiveIntensity={0.5} />
+          </mesh>
+          {puppetPositionsRef.current.chest && (
+            <mesh position={[puppetPositionsRef.current.chest.x, puppetPositionsRef.current.chest.y, puppetPositionsRef.current.chest.z]}>
               <sphereGeometry args={[0.02, 8, 8]} />
               <meshStandardMaterial color="pink" emissive="pink" emissiveIntensity={0.5} />
             </mesh>
-            <mesh position={[puppetLeftHandPos.x, puppetLeftHandPos.y, puppetLeftHandPos.z]}>
+          )}
+          {puppetPositionsRef.current.leftHand && (
+            <mesh position={[puppetPositionsRef.current.leftHand.x, puppetPositionsRef.current.leftHand.y, puppetPositionsRef.current.leftHand.z]}>
               <sphereGeometry args={[0.02, 8, 8]} />
               <meshStandardMaterial color="blue" emissive="blue" emissiveIntensity={0.5} />
             </mesh>
-            <mesh position={[puppetRightHandPos.x, puppetRightHandPos.y, puppetRightHandPos.z]}>
+          )}
+          {puppetPositionsRef.current.rightHand && (
+            <mesh position={[puppetPositionsRef.current.rightHand.x, puppetPositionsRef.current.rightHand.y, puppetPositionsRef.current.rightHand.z]}>
               <sphereGeometry args={[0.02, 8, 8]} />
               <meshStandardMaterial color="green" emissive="green" emissiveIntensity={0.5} />
             </mesh>
-            <mesh position={[puppetLeftFootPos.x, puppetLeftFootPos.y, puppetLeftFootPos.z]}>
+          )}
+          {puppetPositionsRef.current.leftShoulder && (
+            <mesh position={[puppetPositionsRef.current.leftShoulder.x, puppetPositionsRef.current.leftShoulder.y, puppetPositionsRef.current.leftShoulder.z]}>
+              <sphereGeometry args={[0.02, 8, 8]} />
+              <meshStandardMaterial color="cyan" emissive="cyan" emissiveIntensity={0.5} />
+            </mesh>
+          )}
+          {puppetPositionsRef.current.rightShoulder && (
+            <mesh position={[puppetPositionsRef.current.rightShoulder.x, puppetPositionsRef.current.rightShoulder.y, puppetPositionsRef.current.rightShoulder.z]}>
+              <sphereGeometry args={[0.02, 8, 8]} />
+              <meshStandardMaterial color="magenta" emissive="magenta" emissiveIntensity={0.5} />
+            </mesh>
+          )}
+          {puppetPositionsRef.current.leftFoot && (
+            <mesh position={[puppetPositionsRef.current.leftFoot.x, puppetPositionsRef.current.leftFoot.y, puppetPositionsRef.current.leftFoot.z]}>
               <sphereGeometry args={[0.02, 8, 8]} />
               <meshStandardMaterial color="yellow" emissive="yellow" emissiveIntensity={0.5} />
             </mesh>
-            <mesh position={[puppetRightFootPos.x, puppetRightFootPos.y, puppetRightFootPos.z]}>
+          )}
+          {puppetPositionsRef.current.rightFoot && (
+            <mesh position={[puppetPositionsRef.current.rightFoot.x, puppetPositionsRef.current.rightFoot.y, puppetPositionsRef.current.rightFoot.z]}>
               <sphereGeometry args={[0.02, 8, 8]} />
               <meshStandardMaterial color="orange" emissive="orange" emissiveIntensity={0.5} />
             </mesh>
-          </>
-        )
-      })()}
+          )}
+        </>
+      )}
     </group>
   )
 }
