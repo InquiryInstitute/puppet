@@ -65,24 +65,43 @@ export default function MarionetteStrings({
     }
 
     // Puppet attachment points (based on actual puppet geometry)
-    // Head top
-    const puppetHeadLocal = new THREE.Vector3(0, 0.4 + 0.15, 0) // Head is at y=0.4, radius=0.15
-    // Chest (torso top)
-    const puppetChestLocal = new THREE.Vector3(0, 0.2, 0) // Torso center is at y=0, height=0.4, so top is y=0.2
-    // Left hand (shoulder at -0.15, upper arm extends to -0.18, forearm to -0.36, hand at -0.36)
-    const puppetLeftHandLocal = new THREE.Vector3(-0.36, 0.1, 0) // Hand is at end of forearm
-    // Right hand
-    const puppetRightHandLocal = new THREE.Vector3(0.36, 0.1, 0)
-    // Left shoulder (where arm attaches to torso)
+    // All positions are relative to the puppet group (which is at [0, 0.625, 0] in world space)
+    // Torso is at [0, 0, 0] relative to group, height=0.4 (so top at y=0.2, bottom at y=-0.2)
+    // Head is at [0, 0.4, 0] relative to torso, radius=0.15, so top of head is at y=0.4+0.15=0.55
+    const puppetHeadLocal = new THREE.Vector3(0, 0.55, 0) // Top of head sphere
+    
+    // Chest (torso top) - torso center at y=0, height=0.4, so top is y=0.2
+    const puppetChestLocal = new THREE.Vector3(0, 0.2, 0)
+    
+    // Left hand: shoulder at [-0.15, 0.1, 0] relative to torso
+    // Upper arm extends from shoulder to [-0.15-0.18, 0.1, 0] = [-0.33, 0.1, 0]
+    // Forearm group is at [-0.18, 0, 0] relative to upper arm, so [-0.33, 0.1, 0] relative to group
+    // Forearm extends another 0.18, hand sphere is at [-0.18, 0, 0] relative to forearm group
+    // So hand is at [-0.33-0.18, 0.1, 0] = [-0.51, 0.1, 0] relative to group
+    const puppetLeftHandLocal = new THREE.Vector3(-0.51, 0.1, 0)
+    
+    // Right hand: mirror of left
+    const puppetRightHandLocal = new THREE.Vector3(0.51, 0.1, 0)
+    
+    // Left shoulder: where arm attaches to torso
     const puppetLeftShoulderLocal = new THREE.Vector3(-0.15, 0.1, 0)
+    
     // Right shoulder
     const puppetRightShoulderLocal = new THREE.Vector3(0.15, 0.1, 0)
-    // Left foot (hip at -0.1, -0.2, thigh extends down 0.2, shin extends down 0.2, foot at end)
-    const puppetLeftFootLocal = new THREE.Vector3(-0.1, -0.2 - 0.2 - 0.2, 0.05) // Hip at y=-0.2, thigh 0.2, shin 0.2, foot at end
-    // Right foot
-    const puppetRightFootLocal = new THREE.Vector3(0.1, -0.2 - 0.2 - 0.2, 0.05)
+    
+    // Left foot: hip at [-0.1, -0.2, 0] relative to torso
+    // Thigh extends down 0.2, so thigh end is at [-0.1, -0.2-0.2, 0] = [-0.1, -0.4, 0]
+    // Shin group is at [0, -0.2, 0] relative to thigh, so [-0.1, -0.4-0.2, 0] = [-0.1, -0.6, 0]
+    // Shin extends down 0.2, foot is at [0, -0.2, 0.05] relative to shin
+    // So foot is at [-0.1, -0.6-0.2, 0.05] = [-0.1, -0.8, 0.05] relative to group
+    const puppetLeftFootLocal = new THREE.Vector3(-0.1, -0.8, 0.05)
+    
+    // Right foot: mirror of left
+    const puppetRightFootLocal = new THREE.Vector3(0.1, -0.8, 0.05)
 
     // Transform to world space
+    // Note: puppetWorldPos is the center of the puppet group (at [0, 0.625, 0] in world)
+    // All local positions are relative to this group center
     const puppetHeadPos = puppetHeadLocal.clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
     const puppetChestPos = puppetChestLocal.clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
     const puppetLeftHandPos = puppetLeftHandLocal.clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
