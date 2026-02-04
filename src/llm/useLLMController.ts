@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { MotionSequence, LLMResponse } from './types'
+import { MotionSequence } from './types'
 import { generateMotionSequence } from './motionGenerator'
 
 export function useLLMController() {
