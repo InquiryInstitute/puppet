@@ -1,0 +1,116 @@
+.kleist-essay {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  color: #e2e8f0;
+  padding: 2rem;
+  font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+.essay-content {
+  max-width: 900px;
+  margin: 0 auto;
+  animation: fadeIn 1s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.essay-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 2px solid rgba(253, 188, 180, 0.3);
+}
+
+.essay-header h1 {
+  font-size: 2.5rem;
+  color: #fdbcb4;
+  margin-bottom: 0.5rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.essay-author {
+  font-size: 1.3rem;
+  color: #cbd5e0;
+  margin: 0.5rem 0;
+  font-style: italic;
+}
+
+.essay-date {
+  font-size: 1rem;
+  color: #a0aec0;
+  margin: 0;
+}
+
+.essay-text {
+  font-size: 1.15rem;
+  line-height: 2;
+  text-align: justify;
+  color: #e2e8f0;
+  margin-bottom: 3rem;
+}
+
+.essay-text p {
+  margin-bottom: 1.5rem;
+  text-indent: 2rem;
+}
+
+.essay-text p:first-of-type {
+  text-indent: 0;
+}
+
+.essay-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 2rem;
+  border-top: 2px solid rgba(253, 188, 180, 0.3);
+  margin-top: 3rem;
+}
+
+.nav-link {
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  text-decoration: none;
+  color: #fdbcb4;
+  border: 2px solid rgba(253, 188, 180, 0.5);
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  background: rgba(253, 188, 180, 0.1);
+}
+
+.nav-link:hover {
+  background: rgba(253, 188, 180, 0.2);
+  border-color: #fdbcb4;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(253, 188, 180, 0.3);
+}
+
+@media (max-width: 768px) {
+  .essay-header h1 {
+    font-size: 1.8rem;
+  }
+  
+  .essay-text {
+    font-size: 1rem;
+    line-height: 1.8;
+  }
+  
+  .essay-navigation {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .nav-link {
+    width: 100%;
+    text-align: center;
+  }
+}

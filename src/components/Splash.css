@@ -1,0 +1,129 @@
+.splash {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  color: #e2e8f0;
+  padding: 2rem;
+  font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+.splash-content {
+  max-width: 800px;
+  text-align: center;
+  animation: fadeIn 1s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.splash-title {
+  font-size: 2.5rem;
+  font-style: italic;
+  margin-bottom: 2rem;
+  color: #fdbcb4;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  line-height: 1.4;
+}
+
+.splash-description {
+  text-align: left;
+  font-size: 1.1rem;
+  line-height: 1.8;
+  margin-bottom: 2rem;
+  color: #cbd5e0;
+}
+
+.splash-description p {
+  margin-bottom: 1.5rem;
+}
+
+.splash-features {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.splash-description ul {
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 2rem;
+}
+
+.splash-description li {
+  padding: 0.5rem 0;
+  padding-left: 1.5rem;
+  position: relative;
+}
+
+.splash-description li::before {
+  content: "🎭";
+  position: absolute;
+  left: 0;
+}
+
+.splash-buttons {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 2rem;
+}
+
+.splash-button {
+  display: inline-block;
+  padding: 1rem 2.5rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-decoration: none;
+  color: #1a1a2e;
+  background: linear-gradient(135deg, #fdbcb4 0%, #ff8c8c 100%);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(253, 188, 180, 0.3);
+}
+
+.splash-button.secondary {
+  color: #fdbcb4;
+  background: transparent;
+  border: 2px solid rgba(253, 188, 180, 0.5);
+  box-shadow: 0 4px 15px rgba(253, 188, 180, 0.2);
+}
+
+.splash-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(253, 188, 180, 0.5);
+  background: linear-gradient(135deg, #ff8c8c 0%, #fdbcb4 100%);
+}
+
+.splash-button.secondary:hover {
+  background: rgba(253, 188, 180, 0.1);
+  border-color: #fdbcb4;
+}
+
+.splash-button:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+  .splash-title {
+    font-size: 1.8rem;
+  }
+  
+  .splash-description {
+    font-size: 1rem;
+  }
+  
+  .splash-button {
+    padding: 0.8rem 2rem;
+    font-size: 1rem;
+  }
+}
