@@ -311,6 +311,11 @@ export default function MarionetteStrings({
               transparent={false}
               opacity={1.0}
             />
+            {/* Debug: Show exact end point of string to verify it matches control bar sphere */}
+            <mesh position={[config.end.x, config.end.y, config.end.z]}>
+              <sphereGeometry args={[0.015, 8, 8]} />
+              <meshStandardMaterial color="white" emissive="white" emissiveIntensity={1.0} />
+            </mesh>
             {/* Interactive hitboxes along the string - spheres for easier interaction */}
             {hitboxPoints.map((point, idx) => (
               <mesh
