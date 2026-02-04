@@ -29,12 +29,17 @@ export default function Puppet({ stringControls, controlBarRef, onStringPull }: 
   const rightThighRef = useRef<THREE.Group>(null)
   const rightShinRef = useRef<THREE.Group>(null)
 
-  // Gravity simulation
+  // Gravity simulation with mass
   const velocityRef = useRef(new THREE.Vector3(0, 0, 0))
   const puppetBaseYRef = useRef(0.57) // Base Y position - feet should touch stage (stage at y=0, feet at -0.57 relative to torso)
-  const GRAVITY = -9.81 * 0.1 // Scaled down for visual effect (m/s²)
-  const DAMPING = 0.95 // Air resistance
-  const STRING_LIFT_FORCE = 2.0 // How much strings can lift against gravity
+  const puppetBaseXRef = useRef(0) // Horizontal position constraint
+  const puppetBaseZRef = useRef(0) // Depth position constraint
+  const MASS = 2.0 // Puppet mass (kg) - makes it heavier, harder to lift
+  const GRAVITY = -9.81 * 0.15 // Gravity force (m/s²) - always constant
+  const DAMPING = 0.92 // Air resistance (stronger damping = more mass effect)
+  const MAX_STRING_LIFT = 1.5 // Maximum lift force from strings (can only partially counteract gravity)
+  const MAX_HEIGHT = 2.0 // Maximum height puppet can reach (based on string length)
+  const MAX_HORIZONTAL_DISTANCE = 1.0 // Maximum horizontal distance from center
 
   // Puppet parts are only controlled by strings, not directly animated
   // All movement comes from string tension controlled by the crossbar
@@ -53,19 +58,24 @@ export default function Puppet({ stringControls, controlBarRef, onStringPull }: 
       (stringControls.rightFoot || 0)
     ) / 6 : 0
 
-    // Apply gravity to puppet's base position
-    // Strings counteract gravity - more pull = less gravity effect
-    const gravityForce = GRAVITY * (1 - totalPull * 0.7) // Strings reduce gravity effect
+    // Apply constant gravity (always pulling down, regardless of strings)
+    const gravityForce = GRAVITY / MASS // Gravity scaled by mass (heavier = slower fall)
     velocityRef.current.y += gravityForce * delta
-    velocityRef.current.y *= DAMPING // Apply damping
     
-    // Apply string lift force
-    if (totalPull > 0) {
-      velocityRef.current.y += totalPull * STRING_LIFT_FORCE * delta
-    }
+    // Apply string lift force (can only partially counteract gravity)
+    // Strings can lift, but gravity always wins if strings are relaxed
+    const stringLiftForce = (totalPull * MAX_STRING_LIFT) / MASS
+    velocityRef.current.y += stringLiftForce * delta
+    
+    // Apply damping (simulates air resistance and mass inertia)
+    velocityRef.current.y *= DAMPING
+    velocityRef.current.x *= DAMPING
+    velocityRef.current.z *= DAMPING
 
     // Update puppet base position
     puppetBaseYRef.current += velocityRef.current.y * delta
+    puppetBaseXRef.current += velocityRef.current.x * delta
+    puppetBaseZRef.current += velocityRef.current.z * delta
     
     // Floor collision - puppet can't fall below stage
     // Feet are at y = -0.57 relative to torso (torso at y=0, feet extend down 0.57)
@@ -73,11 +83,38 @@ export default function Puppet({ stringControls, controlBarRef, onStringPull }: 
     const floorY = 0.57 // Minimum height so feet touch stage
     if (puppetBaseYRef.current < floorY) {
       puppetBaseYRef.current = floorY
-      velocityRef.current.y = 0
+      velocityRef.current.y = Math.max(0, velocityRef.current.y) // Can't have downward velocity when on ground
     }
     
+    // Ceiling constraint - puppet can't fly too high (limited by string length)
+    if (puppetBaseYRef.current > MAX_HEIGHT) {
+      puppetBaseYRef.current = MAX_HEIGHT
+      velocityRef.current.y = Math.min(0, velocityRef.current.y) // Can't have upward velocity at max height
+    }
+    
+    // Horizontal constraints - puppet can't fly too far sideways
+    const distanceFromCenter = Math.sqrt(puppetBaseXRef.current ** 2 + puppetBaseZRef.current ** 2)
+    if (distanceFromCenter > MAX_HORIZONTAL_DISTANCE) {
+      // Pull back towards center
+      const angle = Math.atan2(puppetBaseZRef.current, puppetBaseXRef.current)
+      puppetBaseXRef.current = Math.cos(angle) * MAX_HORIZONTAL_DISTANCE
+      puppetBaseZRef.current = Math.sin(angle) * MAX_HORIZONTAL_DISTANCE
+      // Dampen horizontal velocity
+      velocityRef.current.x *= 0.5
+      velocityRef.current.z *= 0.5
+    }
+    
+    // Apply spring-like force to return to center (simulates string tension)
+    const springForce = 0.3 // Spring constant
+    velocityRef.current.x -= puppetBaseXRef.current * springForce * delta
+    velocityRef.current.z -= puppetBaseZRef.current * springForce * delta
+    
     // Update puppet group position
-    groupRef.current.position.y = puppetBaseYRef.current
+    groupRef.current.position.set(
+      puppetBaseXRef.current,
+      puppetBaseYRef.current,
+      puppetBaseZRef.current
+    )
 
     if (!stringControls) return
 
