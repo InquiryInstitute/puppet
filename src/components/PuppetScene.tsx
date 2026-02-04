@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import Puppet from './Puppet'
 import MarionetteControl from './MarionetteControl'
 import { useMuJoCo } from '../mujoco/useMuJoCo'
 import { useLLMController } from '../llm/useLLMController'
+import { createWoodTexture } from '../utils/woodTexture'
 
 interface PuppetSceneProps {
   command: string
@@ -30,6 +31,9 @@ export default function PuppetScene({ command }: PuppetSceneProps) {
     rightHand: 0,
   })
   const lastCommandRef = useRef<string>('')
+  
+  // Create wood texture for stage
+  const woodTexture = useMemo(() => createWoodTexture(), [])
 
   // Handle direct string pulling
   const handleStringPull = (stringName: string, pullAmount: number) => {
@@ -98,25 +102,13 @@ export default function PuppetScene({ command }: PuppetSceneProps) {
 
   return (
     <>
-      {/* Stage surface */}
+      {/* Stage surface with wood texture */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <planeGeometry args={[10, 10]} />
         <meshStandardMaterial 
-          color="#3a3a3a"
-          roughness={0.8}
-          metalness={0.1}
-        />
-      </mesh>
-      
-      {/* Stage floor pattern/boards */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.001, 0]} receiveShadow>
-        <planeGeometry args={[10, 10]} />
-        <meshStandardMaterial 
-          color="#2a2a2a"
-          roughness={0.9}
+          map={woodTexture}
+          roughness={0.7}
           metalness={0.0}
-          transparent
-          opacity={0.3}
         />
       </mesh>
       
