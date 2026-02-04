@@ -50,24 +50,13 @@ export default function MarionetteControl({
     ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
   }
 
-  // Handle pointer move for dragging
+  // Handle pointer move for dragging (called on the mesh)
   const handlePointerMove = (e: any) => {
     if (!isDragging || !controlRef.current) return
+    e.stopPropagation()
     
-    // Raycast to find intersection with drag plane
-    const raycaster = new THREE.Raycaster()
-    raycaster.setFromCamera(
-      new THREE.Vector2(
-        (e.clientX / window.innerWidth) * 2 - 1,
-        -(e.clientY / window.innerHeight) * 2 + 1
-      ),
-      camera
-    )
-    
-    const intersection = new THREE.Vector3()
-    raycaster.ray.intersectPlane(dragPlaneRef.current, intersection)
-    
-    const delta = new THREE.Vector3().subVectors(intersection, previousPointRef.current)
+    // Use the intersection point from the event
+    const delta = new THREE.Vector3().subVectors(e.point, previousPointRef.current)
     
     // Update position (left/right, up/down)
     if (!e.shiftKey) {
@@ -91,7 +80,7 @@ export default function MarionetteControl({
       })
     }
     
-    previousPointRef.current.copy(intersection)
+    previousPointRef.current.copy(e.point)
   }
 
   // Handle pointer up to stop dragging
