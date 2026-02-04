@@ -13,9 +13,10 @@ interface PuppetProps {
     rightFoot?: number
   }
   controlBarRef?: React.RefObject<THREE.Group>
+  onStringPull?: (stringName: string, pullAmount: number) => void
 }
 
-export default function Puppet({ stringControls, controlBarRef }: PuppetProps) {
+export default function Puppet({ stringControls, controlBarRef, onStringPull }: PuppetProps) {
   const groupRef = useRef<THREE.Group>(null)
   const headRef = useRef<THREE.Group>(null)
   const torsoRef = useRef<THREE.Group>(null)
@@ -183,6 +184,7 @@ export default function Puppet({ stringControls, controlBarRef }: PuppetProps) {
         controlBarRef={controlBarRef}
         stringControls={stringControls}
         puppetPosition={[0, 0.57, 0]}
+        onStringPull={onStringPull}
       />
 
       {/* Torso (root of puppet hierarchy) */}

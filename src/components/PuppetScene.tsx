@@ -31,6 +31,41 @@ export default function PuppetScene({ command }: PuppetSceneProps) {
   })
   const lastCommandRef = useRef<string>('')
 
+  // Handle direct string pulling
+  const handleStringPull = (stringName: string, pullAmount: number) => {
+    setStringControls(prev => {
+      const updated = { ...prev }
+      // Map string names to control properties
+      switch (stringName) {
+        case 'head':
+          updated.head = pullAmount
+          break
+        case 'chest':
+          updated.torso = pullAmount
+          break
+        case 'leftHand':
+          updated.leftHand = pullAmount
+          break
+        case 'rightHand':
+          updated.rightHand = pullAmount
+          break
+        case 'leftShoulder':
+          updated.torso = Math.max(updated.torso || 0, pullAmount * 0.5)
+          break
+        case 'rightShoulder':
+          updated.torso = Math.max(updated.torso || 0, pullAmount * 0.5)
+          break
+        case 'leftFoot':
+          updated.leftFoot = pullAmount
+          break
+        case 'rightFoot':
+          updated.rightFoot = pullAmount
+          break
+      }
+      return updated
+    })
+  }
+
   // Execute command when it changes
   useEffect(() => {
     if (command && command !== lastCommandRef.current && !isProcessing) {
@@ -127,6 +162,7 @@ export default function PuppetScene({ command }: PuppetSceneProps) {
         <Puppet 
           stringControls={stringControls}
           controlBarRef={controlBarRef}
+          onStringPull={handleStringPull}
         />
       </group>
     </>

@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { Line } from '@react-three/drei'
 import * as THREE from 'three'
 
@@ -15,16 +15,21 @@ interface MarionetteStringsProps {
     rightFoot?: number
   }
   puppetPosition?: [number, number, number]
+  onStringPull?: (stringName: string, pullAmount: number) => void
 }
 
 export default function MarionetteStrings({ 
   puppetRef, 
   controlBarRef,
   stringControls = {},
-  puppetPosition = [0, 1, 0]
+  puppetPosition = [0, 1, 0],
+  onStringPull
 }: MarionetteStringsProps) {
   const stringsRef = useRef<THREE.Group>(null)
   const [stringLines, setStringLines] = useState<JSX.Element[]>([])
+  const [draggedString, setDraggedString] = useState<string | null>(null)
+  const [dragStartPos, setDragStartPos] = useState<THREE.Vector3 | null>(null)
+  const { gl } = useThree()
 
   useFrame(() => {
     if (!puppetRef.current) {
@@ -174,6 +179,39 @@ export default function MarionetteStrings({
       },
     ]
 
+    // Handle string dragging
+    const handleStringDown = (e: any, stringName: string) => {
+      e.stopPropagation()
+      setDraggedString(stringName)
+      setDragStartPos(e.point.clone())
+      gl.domElement.style.cursor = 'grabbing'
+      ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+    }
+
+    const handleStringMove = (e: any) => {
+      if (!draggedString || !dragStartPos) return
+      e.stopPropagation()
+      
+      // Calculate pull amount based on vertical movement (pulling up = more pull)
+      const dragDelta = e.point.clone().sub(dragStartPos)
+      const pullAmount = Math.max(0, Math.min(1, -dragDelta.y / 0.5)) // Pull up to 0.5m = full pull
+      
+      if (onStringPull) {
+        onStringPull(draggedString, pullAmount)
+      }
+    }
+
+    const handleStringUp = (e: any) => {
+      if (draggedString) {
+        setDraggedString(null)
+        setDragStartPos(null)
+        gl.domElement.style.cursor = 'grab'
+        if (e.target) {
+          (e.target as HTMLElement).releasePointerCapture(e.pointerId)
+        }
+      }
+    }
+
     const lines = stringConfigs
       .filter(config => config.visible !== false)
       .map((config) => {
@@ -201,15 +239,38 @@ export default function MarionetteStrings({
         // Generate points along the curve
         const curvePoints = curve.getPoints(30)
         
+        // Create interactive hitboxes at key points along the string
+        const hitboxPoints = [
+          curvePoints[Math.floor(curvePoints.length * 0.25)],
+          curvePoints[Math.floor(curvePoints.length * 0.5)],
+          curvePoints[Math.floor(curvePoints.length * 0.75)],
+        ]
+        
         return (
-          <Line
-            key={config.name}
-            points={curvePoints}
-            color={config.color}
-            lineWidth={1.5}
-            transparent
-            opacity={0.7}
-          />
+          <group key={config.name}>
+            <Line
+              points={curvePoints}
+              color={config.color}
+              lineWidth={draggedString === config.name ? 2.5 : 1.5}
+              transparent
+              opacity={draggedString === config.name ? 1.0 : 0.7}
+            />
+            {/* Interactive hitboxes along the string - spheres for easier interaction */}
+            {hitboxPoints.map((point, idx) => (
+              <mesh
+                key={`${config.name}-hitbox-${idx}`}
+                position={[point.x, point.y, point.z]}
+                onPointerDown={(e) => handleStringDown(e, config.name)}
+                onPointerMove={handleStringMove}
+                onPointerUp={handleStringUp}
+                onPointerLeave={handleStringUp}
+                visible={false}
+              >
+                <sphereGeometry args={[0.03, 8, 8]} />
+                <meshStandardMaterial transparent opacity={0} />
+              </mesh>
+            ))}
+          </group>
         )
       })
     
