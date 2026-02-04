@@ -41,9 +41,6 @@ export default function MarionetteStrings({
   const [draggedString, setDraggedString] = useState<string | null>(null)
   const [dragStartPos, setDragStartPos] = useState<THREE.Vector3 | null>(null)
   const { gl } = useThree()
-  
-  // Store natural (rest) length of each string
-  const naturalLengthsRef = useRef<{ [key: string]: number }>({})
 
   useFrame(() => {
     if (!puppetRef.current) {
@@ -143,99 +140,66 @@ export default function MarionetteStrings({
     const controlFrontPos = controlFrontLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
     const controlBackPos = controlBackLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
 
-    // Calculate natural (rest) length for each string on first frame
-    // Natural length is the distance when puppet is at rest and control bar is at default position
-    const calculateNaturalLength = (start: THREE.Vector3, end: THREE.Vector3, name: string) => {
-      if (!naturalLengthsRef.current[name]) {
-        naturalLengthsRef.current[name] = start.distanceTo(end)
-      }
-      return naturalLengthsRef.current[name]
-    }
-
-    // All 8 strings from MuJoCo model - calculate end points without stretching
+    // All 8 strings from MuJoCo model - connect directly to control bar attachment points
+    // For now, always connect to the actual control bar positions (same as debug spheres)
     const stringConfigs = [
       {
         name: 'head',
         start: puppetHeadPos,
-        controlEnd: controlCenterPos,
+        end: controlCenterPos.clone(), // Direct connection to control bar
         color: '#ff6b6b',
         visible: true,
       },
       {
         name: 'chest',
         start: puppetChestPos,
-        controlEnd: controlCenterPos,
+        end: controlCenterPos.clone(), // Direct connection to control bar
         color: '#ff8c8c',
         visible: true,
       },
       {
         name: 'leftHand',
         start: puppetLeftHandPos,
-        controlEnd: controlLeftPos,
+        end: controlLeftPos.clone(), // Direct connection to control bar
         color: '#4ecdc4',
         visible: true,
       },
       {
         name: 'rightHand',
         start: puppetRightHandPos,
-        controlEnd: controlRightPos,
+        end: controlRightPos.clone(), // Direct connection to control bar
         color: '#45b7d1',
         visible: true,
       },
       {
         name: 'leftShoulder',
         start: puppetLeftShoulderPos,
-        controlEnd: controlFrontPos,
+        end: controlFrontPos.clone(), // Direct connection to control bar
         color: '#96ceb4',
         visible: true,
       },
       {
         name: 'rightShoulder',
         start: puppetRightShoulderPos,
-        controlEnd: controlBackPos,
+        end: controlBackPos.clone(), // Direct connection to control bar
         color: '#a8d5ba',
         visible: true,
       },
       {
         name: 'leftFoot',
         start: puppetLeftFootPos,
-        controlEnd: controlFrontPos,
+        end: controlFrontPos.clone(), // Direct connection to control bar
         color: '#ffeaa7',
         visible: true,
       },
       {
         name: 'rightFoot',
         start: puppetRightFootPos,
-        controlEnd: controlBackPos,
+        end: controlBackPos.clone(), // Direct connection to control bar
         color: '#fdcb6e',
         visible: true,
       },
-    ].map(config => {
-      // Calculate natural length
-      const naturalLength = calculateNaturalLength(config.start, config.controlEnd, config.name)
-      
-      // Calculate current distance
-      const currentDistance = config.start.distanceTo(config.controlEnd)
-      
-      // If string would stretch beyond natural length, constrain the end point
-      let end: THREE.Vector3
-      if (currentDistance > naturalLength) {
-        // String is being pulled - constrain to natural length
-        const direction = new THREE.Vector3().subVectors(config.controlEnd, config.start).normalize()
-        end = config.start.clone().add(direction.multiplyScalar(naturalLength))
-      } else {
-        // String is slack - use actual control bar position (string can be shorter but not longer)
-        end = config.controlEnd.clone()
-      }
-      
-      return {
-        ...config,
-        end,
-        naturalLength,
-        currentDistance,
-        isTaut: currentDistance >= naturalLength
-      }
-    })
+    ]
 
     // Handle string dragging
     const handleStringDown = (e: any, stringName: string) => {
@@ -293,11 +257,8 @@ export default function MarionetteStrings({
           .multiplyScalar(0.5)
         
         // Add sag based on string length (longer strings sag more)
-        // Only sag if string is slack (not taut)
         const stringLength = config.start.distanceTo(config.end)
-        const sagAmount = config.isTaut 
-          ? 0 // No sag when taut
-          : Math.max(0.02, stringLength * 0.08) // 8% sag when slack, minimum 2cm
+        const sagAmount = Math.max(0.02, stringLength * 0.08) // 8% sag, minimum 2cm
         
         // Sag downward (negative Y) to simulate gravity
         const controlPoint = midPoint.clone()
@@ -328,7 +289,7 @@ export default function MarionetteStrings({
             <Line
               points={pointsArray}
               color={config.color}
-              lineWidth={draggedString === config.name ? 5 : (config.isTaut ? 4 : 3)}
+              lineWidth={draggedString === config.name ? 5 : 3}
               transparent={false}
               opacity={1.0}
             />
