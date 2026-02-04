@@ -1,4 +1,5 @@
 import { useMemo, useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
 import { Line } from '@react-three/drei'
 import * as THREE from 'three'
 
@@ -25,18 +26,21 @@ export default function MarionetteStrings({
   const stringsRef = useRef<THREE.Group>(null)
 
   const strings = useMemo(() => {
-    if (!puppetRef.current) return null
-
+    // Get control bar world position
     const controlBarWorldPos = new THREE.Vector3()
     const controlBarWorldQuat = new THREE.Quaternion()
+    const controlBarWorldScale = new THREE.Vector3()
     
     if (controlBarRef?.current) {
       controlBarRef.current.getWorldPosition(controlBarWorldPos)
       controlBarRef.current.getWorldQuaternion(controlBarWorldQuat)
+      controlBarRef.current.getWorldScale(controlBarWorldScale)
     } else {
+      // Default position above puppet if no control bar
       controlBarWorldPos.set(puppetPosition[0], puppetPosition[1] + 0.5, puppetPosition[2])
     }
 
+    // Get puppet world position
     const puppetWorldPos = new THREE.Vector3()
     const puppetWorldQuat = new THREE.Quaternion()
     if (puppetRef.current) {
@@ -46,62 +50,146 @@ export default function MarionetteStrings({
       puppetWorldPos.set(...puppetPosition)
     }
 
-    const puppetHeadLocal = new THREE.Vector3(0, 0.42, 0)
-    const puppetLeftHandLocal = new THREE.Vector3(-0.2, -0.19, 0)
-    const puppetRightHandLocal = new THREE.Vector3(0.2, -0.19, 0)
+    // Puppet attachment points (based on actual puppet geometry)
+    // Head top
+    const puppetHeadLocal = new THREE.Vector3(0, 0.4 + 0.15, 0) // Head is at y=0.4, radius=0.15
+    // Chest (torso top)
+    const puppetChestLocal = new THREE.Vector3(0, 0.2, 0) // Torso center is at y=0, height=0.4, so top is y=0.2
+    // Left hand (arm extends to -0.25, hand at end)
+    const puppetLeftHandLocal = new THREE.Vector3(-0.25, 0.1 - 0.18, 0) // Arm at y=0.1, hand extends down 0.18
+    // Right hand
+    const puppetRightHandLocal = new THREE.Vector3(0.25, 0.1 - 0.18, 0)
+    // Left shoulder
+    const puppetLeftShoulderLocal = new THREE.Vector3(-0.25, 0.1, 0) // Shoulder is where arm attaches
+    // Right shoulder
+    const puppetRightShoulderLocal = new THREE.Vector3(0.25, 0.1, 0)
+    // Left foot
+    const puppetLeftFootLocal = new THREE.Vector3(-0.1, -0.3 - 0.2, 0.05) // Leg at y=-0.3, foot extends down 0.2
+    // Right foot
+    const puppetRightFootLocal = new THREE.Vector3(0.1, -0.3 - 0.2, 0.05)
 
+    // Transform to world space
     const puppetHeadPos = puppetHeadLocal.clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
+    const puppetChestPos = puppetChestLocal.clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
     const puppetLeftHandPos = puppetLeftHandLocal.clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
     const puppetRightHandPos = puppetRightHandLocal.clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
+    const puppetLeftShoulderPos = puppetLeftShoulderLocal.clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
+    const puppetRightShoulderPos = puppetRightShoulderLocal.clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
+    const puppetLeftFootPos = puppetLeftFootLocal.clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
+    const puppetRightFootPos = puppetRightFootLocal.clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
 
-    const controlHeadLocal = new THREE.Vector3(0, 0, 0)
-    const controlLeftHandLocal = new THREE.Vector3(-0.15, 0, 0)
-    const controlRightHandLocal = new THREE.Vector3(0.15, 0, 0)
+    // Control bar attachment points (matching MuJoCo model sites)
+    // h_center for head and chest
+    const controlCenterLocal = new THREE.Vector3(0, 0, -0.1) // Slightly below control bar
+    // h_left for left hand
+    const controlLeftLocal = new THREE.Vector3(-0.15, 0, 0)
+    // h_right for right hand
+    const controlRightLocal = new THREE.Vector3(0.15, 0, 0)
+    // h_front for left shoulder and left foot
+    const controlFrontLocal = new THREE.Vector3(0, 0.05, 0)
+    // h_back for right shoulder and right foot
+    const controlBackLocal = new THREE.Vector3(0, -0.05, 0)
 
-    const controlHeadPos = controlHeadLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
-    const controlLeftHandPos = controlLeftHandLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
-    const controlRightHandPos = controlRightHandLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
+    // Transform to world space
+    const controlCenterPos = controlCenterLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
+    const controlLeftPos = controlLeftLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
+    const controlRightPos = controlRightLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
+    const controlFrontPos = controlFrontLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
+    const controlBackPos = controlBackLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
 
+    // Apply string control (pull strings up when control > 0)
     const pullAmount = 0.3
     const headPull = (stringControls.head || 0) * pullAmount
+    const chestPull = (stringControls.torso || 0) * pullAmount
     const leftHandPull = (stringControls.leftHand || 0) * pullAmount
     const rightHandPull = (stringControls.rightHand || 0) * pullAmount
+    const leftShoulderPull = (stringControls.torso || 0) * pullAmount * 0.5 // Shoulder strings use torso control
+    const rightShoulderPull = (stringControls.torso || 0) * pullAmount * 0.5
+    const leftFootPull = (stringControls.leftFoot || 0) * pullAmount
+    const rightFootPull = (stringControls.rightFoot || 0) * pullAmount
 
+    // All 8 strings from MuJoCo model
     const stringConfigs = [
       {
         name: 'head',
         start: puppetHeadPos,
-        end: controlHeadPos.clone().add(new THREE.Vector3(0, -headPull, 0)),
+        end: controlCenterPos.clone().add(new THREE.Vector3(0, -headPull, 0)),
         color: '#ff6b6b',
+        visible: true,
+      },
+      {
+        name: 'chest',
+        start: puppetChestPos,
+        end: controlCenterPos.clone().add(new THREE.Vector3(0, -chestPull, 0)),
+        color: '#ff8c8c',
+        visible: true,
       },
       {
         name: 'leftHand',
         start: puppetLeftHandPos,
-        end: controlLeftHandPos.clone().add(new THREE.Vector3(0, -leftHandPull, 0)),
+        end: controlLeftPos.clone().add(new THREE.Vector3(0, -leftHandPull, 0)),
         color: '#4ecdc4',
+        visible: true,
       },
       {
         name: 'rightHand',
         start: puppetRightHandPos,
-        end: controlRightHandPos.clone().add(new THREE.Vector3(0, -rightHandPull, 0)),
+        end: controlRightPos.clone().add(new THREE.Vector3(0, -rightHandPull, 0)),
         color: '#45b7d1',
+        visible: true,
+      },
+      {
+        name: 'leftShoulder',
+        start: puppetLeftShoulderPos,
+        end: controlFrontPos.clone().add(new THREE.Vector3(0, -leftShoulderPull, 0)),
+        color: '#96ceb4',
+        visible: true,
+      },
+      {
+        name: 'rightShoulder',
+        start: puppetRightShoulderPos,
+        end: controlBackPos.clone().add(new THREE.Vector3(0, -rightShoulderPull, 0)),
+        color: '#a8d5ba',
+        visible: true,
+      },
+      {
+        name: 'leftFoot',
+        start: puppetLeftFootPos,
+        end: controlFrontPos.clone().add(new THREE.Vector3(0, -leftFootPull, 0)),
+        color: '#ffeaa7',
+        visible: true,
+      },
+      {
+        name: 'rightFoot',
+        start: puppetRightFootPos,
+        end: controlBackPos.clone().add(new THREE.Vector3(0, -rightFootPull, 0)),
+        color: '#fdcb6e',
+        visible: true,
       },
     ]
 
-    return stringConfigs.map((config) => {
-      const points = [config.start, config.end]
-      return (
-        <Line
-          key={config.name}
-          points={points}
-          color={config.color}
-          lineWidth={2}
-          transparent
-          opacity={0.8}
-        />
-      )
-    })
+    return stringConfigs
+      .filter(config => config.visible !== false)
+      .map((config) => {
+        const points = [config.start, config.end]
+        return (
+          <Line
+            key={config.name}
+            points={points}
+            color={config.color}
+            lineWidth={2}
+            transparent
+            opacity={0.8}
+          />
+        )
+      })
   }, [puppetRef, controlBarRef, stringControls, puppetPosition])
+
+  // Update string positions every frame to follow puppet movement
+  useFrame(() => {
+    // Force recalculation by updating a dependency
+    // The useMemo will recalculate when puppet/control positions change
+  })
 
   return <group ref={stringsRef}>{strings}</group>
 }

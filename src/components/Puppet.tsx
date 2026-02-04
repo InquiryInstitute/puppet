@@ -7,9 +7,18 @@ import { MotionSequence } from '../llm/types'
 interface PuppetProps {
   sequence?: MotionSequence
   sequenceStartTime?: number | null
+  stringControls?: {
+    head?: number
+    leftHand?: number
+    rightHand?: number
+    torso?: number
+    leftFoot?: number
+    rightFoot?: number
+  }
+  controlBarRef?: React.RefObject<THREE.Group>
 }
 
-export default function Puppet({ sequence, sequenceStartTime }: PuppetProps) {
+export default function Puppet({ sequence, sequenceStartTime, stringControls, controlBarRef }: PuppetProps) {
   const groupRef = useRef<THREE.Group>(null)
   const headRef = useRef<THREE.Group>(null)
   const torsoRef = useRef<THREE.Group>(null)
@@ -79,7 +88,12 @@ export default function Puppet({ sequence, sequenceStartTime }: PuppetProps) {
   return (
     <group ref={groupRef} position={[0, 1, 0]}>
       {/* Marionette strings */}
-      <MarionetteStrings puppetRef={groupRef} />
+      <MarionetteStrings 
+        puppetRef={groupRef} 
+        controlBarRef={controlBarRef}
+        stringControls={stringControls}
+        puppetPosition={[0, 1, 0]}
+      />
 
       {/* Head */}
       <group ref={headRef} position={[0, 0.4, 0]}>
