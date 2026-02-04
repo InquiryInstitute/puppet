@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls, PerspectiveCamera, Grid } from '@react-three/drei'
+import { OrbitControls, PerspectiveCamera } from '@react-three/drei'
 import PuppetScene from './components/PuppetScene'
 import ControlPanel from './components/ControlPanel'
 import './App.css'
@@ -27,7 +27,6 @@ function App() {
             shadow-mapSize-width={2048}
             shadow-mapSize-height={2048}
           />
-          <Grid args={[10, 10]} cellColor="#333" sectionColor="#222" />
           <PuppetScene command={command} isExecuting={isExecuting} />
           <OrbitControls
             enablePan={true}

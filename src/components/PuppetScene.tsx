@@ -62,39 +62,73 @@ export default function PuppetScene({ command }: PuppetSceneProps) {
   })
 
   return (
-    <group ref={puppetRef}>
-      {/* Interactive marionette control crossbar */}
-      <MarionetteControl
-        position={[0, 2.5, 0]}
-        onStringControlsChange={setStringControls}
-        stringCount={8}
-        controlBarRef={controlBarRef}
-        controlSequence={currentSequence ? {
-          steps: currentSequence.steps.map(step => ({
-            startTime: step.startTime,
-            duration: step.duration,
-            // Convert puppet part rotations to crossbar movements
-            position: step.rotations.torso ? [
-              0,
-              2.5 - (step.rotations.torso.x || 0) * 0.3, // Lower crossbar to pull torso
-              0
-            ] : undefined,
-            rotation: step.rotations.head || step.rotations.torso ? [
-              (step.rotations.torso?.x || 0) * 0.5, // Tilt forward/back
-              0,
-              (step.rotations.head?.y || 0) * 0.3 // Tilt sideways
-            ] : undefined
-          })),
-          totalDuration: currentSequence.totalDuration
-        } : undefined}
-        sequenceStartTime={sequenceStartTime ?? undefined}
-      />
+    <>
+      {/* Stage surface */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+        <planeGeometry args={[10, 10]} />
+        <meshStandardMaterial 
+          color="#3a3a3a"
+          roughness={0.8}
+          metalness={0.1}
+        />
+      </mesh>
       
-      {/* Puppet - only responds to strings, not direct animation */}
-      <Puppet 
-        stringControls={stringControls}
-        controlBarRef={controlBarRef}
-      />
-    </group>
+      {/* Stage floor pattern/boards */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.001, 0]} receiveShadow>
+        <planeGeometry args={[10, 10]} />
+        <meshStandardMaterial 
+          color="#2a2a2a"
+          roughness={0.9}
+          metalness={0.0}
+          transparent
+          opacity={0.3}
+        />
+      </mesh>
+      
+      {/* Stage backdrop */}
+      <mesh position={[0, 2.5, -5]} receiveShadow>
+        <planeGeometry args={[10, 5]} />
+        <meshStandardMaterial 
+          color="#1a1a1a"
+          roughness={0.7}
+          metalness={0.0}
+        />
+      </mesh>
+
+      <group ref={puppetRef}>
+        {/* Interactive marionette control crossbar */}
+        <MarionetteControl
+          position={[0, 2.5, 0]}
+          onStringControlsChange={setStringControls}
+          stringCount={8}
+          controlBarRef={controlBarRef}
+          controlSequence={currentSequence ? {
+            steps: currentSequence.steps.map(step => ({
+              startTime: step.startTime,
+              duration: step.duration,
+              // Convert puppet part rotations to crossbar movements
+              position: step.rotations.torso ? [
+                0,
+                2.5 - (step.rotations.torso.x || 0) * 0.3, // Lower crossbar to pull torso
+                0
+              ] : undefined,
+              rotation: step.rotations.head || step.rotations.torso ? [
+                (step.rotations.torso?.x || 0) * 0.5, // Tilt forward/back
+                0,
+                (step.rotations.head?.y || 0) * 0.3 // Tilt sideways
+              ] : undefined
+            })),
+            totalDuration: currentSequence.totalDuration
+          } : undefined}
+          sequenceStartTime={sequenceStartTime ?? undefined}
+        />
+        
+        {/* Puppet - only responds to strings, not direct animation */}
+        <Puppet 
+          stringControls={stringControls}
+          controlBarRef={controlBarRef}
+        />
+      </group>
+    </>
   )
 }
