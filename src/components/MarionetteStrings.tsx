@@ -159,61 +159,61 @@ export default function MarionetteStrings({
     }
 
     // All 8 strings from MuJoCo model - connect directly to control bar attachment points
-    // Use the exact same positions as the debug spheres
+    // Use the exact same cloned positions as the debug spheres (from ref)
     const stringConfigs = [
       {
         name: 'head',
-        start: puppetHeadPos,
-        end: controlCenterPos, // Use same position as debug sphere
+        start: puppetHeadPos.clone(),
+        end: controlBarPositionsRef.current.center!.clone(), // Use exact same position as debug sphere
         color: '#ff6b6b',
         visible: true,
       },
       {
         name: 'chest',
-        start: puppetChestPos,
-        end: controlCenterPos, // Use same position as debug sphere
+        start: puppetChestPos.clone(),
+        end: controlBarPositionsRef.current.center!.clone(), // Use exact same position as debug sphere
         color: '#ff8c8c',
         visible: true,
       },
       {
         name: 'leftHand',
-        start: puppetLeftHandPos,
-        end: controlLeftPos, // Use same position as debug sphere
+        start: puppetLeftHandPos.clone(),
+        end: controlBarPositionsRef.current.left!.clone(), // Use exact same position as debug sphere
         color: '#4ecdc4',
         visible: true,
       },
       {
         name: 'rightHand',
-        start: puppetRightHandPos,
-        end: controlRightPos, // Use same position as debug sphere
+        start: puppetRightHandPos.clone(),
+        end: controlBarPositionsRef.current.right!.clone(), // Use exact same position as debug sphere
         color: '#45b7d1',
         visible: true,
       },
       {
         name: 'leftShoulder',
-        start: puppetLeftShoulderPos,
-        end: controlFrontPos, // Use same position as debug sphere
+        start: puppetLeftShoulderPos.clone(),
+        end: controlBarPositionsRef.current.front!.clone(), // Use exact same position as debug sphere
         color: '#96ceb4',
         visible: true,
       },
       {
         name: 'rightShoulder',
-        start: puppetRightShoulderPos,
-        end: controlBackPos, // Use same position as debug sphere
+        start: puppetRightShoulderPos.clone(),
+        end: controlBarPositionsRef.current.back!.clone(), // Use exact same position as debug sphere
         color: '#a8d5ba',
         visible: true,
       },
       {
         name: 'leftFoot',
-        start: puppetLeftFootPos,
-        end: controlFrontPos, // Use same position as debug sphere
+        start: puppetLeftFootPos.clone(),
+        end: controlBarPositionsRef.current.front!.clone(), // Use exact same position as debug sphere
         color: '#ffeaa7',
         visible: true,
       },
       {
         name: 'rightFoot',
-        start: puppetRightFootPos,
-        end: controlBackPos, // Use same position as debug sphere
+        start: puppetRightFootPos.clone(),
+        end: controlBarPositionsRef.current.back!.clone(), // Use exact same position as debug sphere
         color: '#fdcb6e',
         visible: true,
       },
