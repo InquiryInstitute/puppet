@@ -351,5 +351,116 @@ export default function MarionetteStrings({
     setStringLines(lines)
   })
 
-  return <group ref={stringsRef}>{stringLines}</group>
+  return (
+    <group ref={stringsRef}>
+      {stringLines}
+      {/* Debug: Show attachment points as small spheres */}
+      {controlBarRef?.current && (() => {
+        const controlBarWorldPos = new THREE.Vector3()
+        const controlBarWorldQuat = new THREE.Quaternion()
+        controlBarRef.current!.getWorldPosition(controlBarWorldPos)
+        controlBarRef.current!.getWorldQuaternion(controlBarWorldQuat)
+        
+        const controlCenterLocal = new THREE.Vector3(0, 0, -0.20)
+        const controlLeftLocal = new THREE.Vector3(-0.12, 0, 0)
+        const controlRightLocal = new THREE.Vector3(0.12, 0, 0)
+        const controlFrontLocal = new THREE.Vector3(0, 0, 0.06)
+        const controlBackLocal = new THREE.Vector3(0, 0, -0.06)
+        
+        const controlCenterPos = controlCenterLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
+        const controlLeftPos = controlLeftLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
+        const controlRightPos = controlRightLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
+        const controlFrontPos = controlFrontLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
+        const controlBackPos = controlBackLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
+        
+        return (
+          <>
+            <mesh position={[controlCenterPos.x, controlCenterPos.y, controlCenterPos.z]}>
+              <sphereGeometry args={[0.02, 8, 8]} />
+              <meshStandardMaterial color="yellow" emissive="yellow" emissiveIntensity={0.5} />
+            </mesh>
+            <mesh position={[controlLeftPos.x, controlLeftPos.y, controlLeftPos.z]}>
+              <sphereGeometry args={[0.02, 8, 8]} />
+              <meshStandardMaterial color="cyan" emissive="cyan" emissiveIntensity={0.5} />
+            </mesh>
+            <mesh position={[controlRightPos.x, controlRightPos.y, controlRightPos.z]}>
+              <sphereGeometry args={[0.02, 8, 8]} />
+              <meshStandardMaterial color="magenta" emissive="magenta" emissiveIntensity={0.5} />
+            </mesh>
+            <mesh position={[controlFrontPos.x, controlFrontPos.y, controlFrontPos.z]}>
+              <sphereGeometry args={[0.02, 8, 8]} />
+              <meshStandardMaterial color="lime" emissive="lime" emissiveIntensity={0.5} />
+            </mesh>
+            <mesh position={[controlBackPos.x, controlBackPos.y, controlBackPos.z]}>
+              <sphereGeometry args={[0.02, 8, 8]} />
+              <meshStandardMaterial color="orange" emissive="orange" emissiveIntensity={0.5} />
+            </mesh>
+          </>
+        )
+      })()}
+      {/* Debug: Show puppet attachment points */}
+      {puppetRef.current && (() => {
+        const puppetWorldPos = new THREE.Vector3()
+        const puppetWorldQuat = new THREE.Quaternion()
+        puppetRef.current!.getWorldPosition(puppetWorldPos)
+        puppetRef.current!.getWorldQuaternion(puppetWorldQuat)
+        
+        const getWorldPositionFromRef = (ref: React.RefObject<THREE.Group> | undefined, offset: THREE.Vector3): THREE.Vector3 => {
+          if (ref?.current) {
+            const worldPos = new THREE.Vector3()
+            ref.current.getWorldPosition(worldPos)
+            const localOffset = offset.clone().applyQuaternion(ref.current.getWorldQuaternion(new THREE.Quaternion()))
+            return worldPos.add(localOffset)
+          }
+          return offset.clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
+        }
+        
+        const puppetHeadPos = headRef 
+          ? getWorldPositionFromRef(headRef, new THREE.Vector3(0, 0.15, 0))
+          : new THREE.Vector3(0, 0.55, 0).clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
+        const puppetChestPos = new THREE.Vector3(0, 0.2, 0).clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
+        const puppetLeftHandPos = leftForearmRef
+          ? getWorldPositionFromRef(leftForearmRef, new THREE.Vector3(-0.18, 0, 0))
+          : new THREE.Vector3(-0.51, 0.1, 0).clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
+        const puppetRightHandPos = rightForearmRef
+          ? getWorldPositionFromRef(rightForearmRef, new THREE.Vector3(0.18, 0, 0))
+          : new THREE.Vector3(0.51, 0.1, 0).clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
+        const puppetLeftFootPos = leftShinRef
+          ? getWorldPositionFromRef(leftShinRef, new THREE.Vector3(0, -0.2, 0.05))
+          : new THREE.Vector3(-0.1, -0.8, 0.05).clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
+        const puppetRightFootPos = rightShinRef
+          ? getWorldPositionFromRef(rightShinRef, new THREE.Vector3(0, -0.2, 0.05))
+          : new THREE.Vector3(0.1, -0.8, 0.05).clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
+        
+        return (
+          <>
+            <mesh position={[puppetHeadPos.x, puppetHeadPos.y, puppetHeadPos.z]}>
+              <sphereGeometry args={[0.02, 8, 8]} />
+              <meshStandardMaterial color="red" emissive="red" emissiveIntensity={0.5} />
+            </mesh>
+            <mesh position={[puppetChestPos.x, puppetChestPos.y, puppetChestPos.z]}>
+              <sphereGeometry args={[0.02, 8, 8]} />
+              <meshStandardMaterial color="pink" emissive="pink" emissiveIntensity={0.5} />
+            </mesh>
+            <mesh position={[puppetLeftHandPos.x, puppetLeftHandPos.y, puppetLeftHandPos.z]}>
+              <sphereGeometry args={[0.02, 8, 8]} />
+              <meshStandardMaterial color="blue" emissive="blue" emissiveIntensity={0.5} />
+            </mesh>
+            <mesh position={[puppetRightHandPos.x, puppetRightHandPos.y, puppetRightHandPos.z]}>
+              <sphereGeometry args={[0.02, 8, 8]} />
+              <meshStandardMaterial color="green" emissive="green" emissiveIntensity={0.5} />
+            </mesh>
+            <mesh position={[puppetLeftFootPos.x, puppetLeftFootPos.y, puppetLeftFootPos.z]}>
+              <sphereGeometry args={[0.02, 8, 8]} />
+              <meshStandardMaterial color="yellow" emissive="yellow" emissiveIntensity={0.5} />
+            </mesh>
+            <mesh position={[puppetRightFootPos.x, puppetRightFootPos.y, puppetRightFootPos.z]}>
+              <sphereGeometry args={[0.02, 8, 8]} />
+              <meshStandardMaterial color="orange" emissive="orange" emissiveIntensity={0.5} />
+            </mesh>
+          </>
+        )
+      })()}
+    </group>
+  )
 }
