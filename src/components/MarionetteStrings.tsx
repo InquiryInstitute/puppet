@@ -21,7 +21,7 @@ interface MarionetteStringsProps {
 export default function MarionetteStrings({ 
   puppetRef, 
   controlBarRef,
-  stringControls = {},
+  stringControls: _stringControls = {}, // Kept for interface compatibility but not used in length calculation
   puppetPosition = [0, 1, 0],
   onStringPull
 }: MarionetteStringsProps) {
@@ -30,6 +30,9 @@ export default function MarionetteStrings({
   const [draggedString, setDraggedString] = useState<string | null>(null)
   const [dragStartPos, setDragStartPos] = useState<THREE.Vector3 | null>(null)
   const { gl } = useThree()
+  
+  // Store natural (rest) length of each string
+  const naturalLengthsRef = useRef<{ [key: string]: number }>({})
 
   useFrame(() => {
     if (!puppetRef.current) {
@@ -109,76 +112,99 @@ export default function MarionetteStrings({
     const controlFrontPos = controlFrontLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
     const controlBackPos = controlBackLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
 
-    // Apply string control (pull strings up when control > 0)
-    const pullAmount = 0.3
-    const headPull = (stringControls.head || 0) * pullAmount
-    const chestPull = (stringControls.torso || 0) * pullAmount
-    const leftHandPull = (stringControls.leftHand || 0) * pullAmount
-    const rightHandPull = (stringControls.rightHand || 0) * pullAmount
-    const leftShoulderPull = (stringControls.torso || 0) * pullAmount * 0.5 // Shoulder strings use torso control
-    const rightShoulderPull = (stringControls.torso || 0) * pullAmount * 0.5
-    const leftFootPull = (stringControls.leftFoot || 0) * pullAmount
-    const rightFootPull = (stringControls.rightFoot || 0) * pullAmount
+    // Calculate natural (rest) length for each string on first frame
+    // Natural length is the distance when puppet is at rest and control bar is at default position
+    const calculateNaturalLength = (start: THREE.Vector3, end: THREE.Vector3, name: string) => {
+      if (!naturalLengthsRef.current[name]) {
+        naturalLengthsRef.current[name] = start.distanceTo(end)
+      }
+      return naturalLengthsRef.current[name]
+    }
 
-    // All 8 strings from MuJoCo model
+    // All 8 strings from MuJoCo model - calculate end points without stretching
     const stringConfigs = [
       {
         name: 'head',
         start: puppetHeadPos,
-        end: controlCenterPos.clone().add(new THREE.Vector3(0, -headPull, 0)),
+        controlEnd: controlCenterPos,
         color: '#ff6b6b',
         visible: true,
       },
       {
         name: 'chest',
         start: puppetChestPos,
-        end: controlCenterPos.clone().add(new THREE.Vector3(0, -chestPull, 0)),
+        controlEnd: controlCenterPos,
         color: '#ff8c8c',
         visible: true,
       },
       {
         name: 'leftHand',
         start: puppetLeftHandPos,
-        end: controlLeftPos.clone().add(new THREE.Vector3(0, -leftHandPull, 0)),
+        controlEnd: controlLeftPos,
         color: '#4ecdc4',
         visible: true,
       },
       {
         name: 'rightHand',
         start: puppetRightHandPos,
-        end: controlRightPos.clone().add(new THREE.Vector3(0, -rightHandPull, 0)),
+        controlEnd: controlRightPos,
         color: '#45b7d1',
         visible: true,
       },
       {
         name: 'leftShoulder',
         start: puppetLeftShoulderPos,
-        end: controlFrontPos.clone().add(new THREE.Vector3(0, -leftShoulderPull, 0)),
+        controlEnd: controlFrontPos,
         color: '#96ceb4',
         visible: true,
       },
       {
         name: 'rightShoulder',
         start: puppetRightShoulderPos,
-        end: controlBackPos.clone().add(new THREE.Vector3(0, -rightShoulderPull, 0)),
+        controlEnd: controlBackPos,
         color: '#a8d5ba',
         visible: true,
       },
       {
         name: 'leftFoot',
         start: puppetLeftFootPos,
-        end: controlFrontPos.clone().add(new THREE.Vector3(0, -leftFootPull, 0)),
+        controlEnd: controlFrontPos,
         color: '#ffeaa7',
         visible: true,
       },
       {
         name: 'rightFoot',
         start: puppetRightFootPos,
-        end: controlBackPos.clone().add(new THREE.Vector3(0, -rightFootPull, 0)),
+        controlEnd: controlBackPos,
         color: '#fdcb6e',
         visible: true,
       },
-    ]
+    ].map(config => {
+      // Calculate natural length
+      const naturalLength = calculateNaturalLength(config.start, config.controlEnd, config.name)
+      
+      // Calculate current distance
+      const currentDistance = config.start.distanceTo(config.controlEnd)
+      
+      // If string would stretch beyond natural length, constrain the end point
+      let end: THREE.Vector3
+      if (currentDistance > naturalLength) {
+        // String is being pulled - constrain to natural length
+        const direction = new THREE.Vector3().subVectors(config.controlEnd, config.start).normalize()
+        end = config.start.clone().add(direction.multiplyScalar(naturalLength))
+      } else {
+        // String is slack - use actual control bar position (string can be shorter but not longer)
+        end = config.controlEnd.clone()
+      }
+      
+      return {
+        ...config,
+        end,
+        naturalLength,
+        currentDistance,
+        isTaut: currentDistance >= naturalLength
+      }
+    })
 
     // Handle string dragging
     const handleStringDown = (e: any, stringName: string) => {
@@ -236,8 +262,11 @@ export default function MarionetteStrings({
           .multiplyScalar(0.5)
         
         // Add sag based on string length (longer strings sag more)
+        // Only sag if string is slack (not taut)
         const stringLength = config.start.distanceTo(config.end)
-        const sagAmount = Math.max(0.02, stringLength * 0.08) // 8% sag, minimum 2cm
+        const sagAmount = config.isTaut 
+          ? 0 // No sag when taut
+          : Math.max(0.02, stringLength * 0.08) // 8% sag when slack, minimum 2cm
         
         // Sag downward (negative Y) to simulate gravity
         const controlPoint = midPoint.clone()
@@ -265,9 +294,9 @@ export default function MarionetteStrings({
             <Line
               points={curvePoints}
               color={config.color}
-              lineWidth={draggedString === config.name ? 2.5 : 1.5}
+              lineWidth={draggedString === config.name ? 2.5 : (config.isTaut ? 2.0 : 1.5)}
               transparent
-              opacity={draggedString === config.name ? 1.0 : 0.7}
+              opacity={draggedString === config.name ? 1.0 : (config.isTaut ? 0.9 : 0.7)}
             />
             {/* Interactive hitboxes along the string - spheres for easier interaction */}
             {hitboxPoints.map((point, idx) => (
