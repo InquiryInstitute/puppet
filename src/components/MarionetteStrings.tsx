@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Line } from '@react-three/drei'
 import * as THREE from 'three'
@@ -24,9 +24,15 @@ export default function MarionetteStrings({
   puppetPosition = [0, 1, 0]
 }: MarionetteStringsProps) {
   const stringsRef = useRef<THREE.Group>(null)
+  const [stringLines, setStringLines] = useState<JSX.Element[]>([])
 
-  const strings = useMemo(() => {
-    // Get control bar world position
+  useFrame(() => {
+    if (!puppetRef.current) {
+      if (stringLines.length > 0) setStringLines([])
+      return
+    }
+    
+    // Get control bar world position (updates every frame)
     const controlBarWorldPos = new THREE.Vector3()
     const controlBarWorldQuat = new THREE.Quaternion()
     const controlBarWorldScale = new THREE.Vector3()
@@ -37,7 +43,7 @@ export default function MarionetteStrings({
       controlBarRef.current.getWorldScale(controlBarWorldScale)
     } else {
       // Default position above puppet if no control bar
-      controlBarWorldPos.set(puppetPosition[0], puppetPosition[1] + 0.5, puppetPosition[2])
+      controlBarWorldPos.set(puppetPosition[0], puppetPosition[1] + 1.5, puppetPosition[2])
     }
 
     // Get puppet world position
@@ -168,7 +174,7 @@ export default function MarionetteStrings({
       },
     ]
 
-    return stringConfigs
+    const lines = stringConfigs
       .filter(config => config.visible !== false)
       .map((config) => {
         // Create flexible curved string using quadratic bezier curve
@@ -206,13 +212,9 @@ export default function MarionetteStrings({
           />
         )
       })
-  }, [puppetRef, controlBarRef, stringControls, puppetPosition])
-
-  // Update string positions every frame to follow puppet movement
-  useFrame(() => {
-    // Force recalculation by updating a dependency
-    // The useMemo will recalculate when puppet/control positions change
+    
+    setStringLines(lines)
   })
 
-  return <group ref={stringsRef}>{strings}</group>
+  return <group ref={stringsRef}>{stringLines}</group>
 }
