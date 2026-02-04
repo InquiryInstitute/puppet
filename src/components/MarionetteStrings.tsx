@@ -181,7 +181,13 @@ export default function MarionetteStrings({
 
     // Handle string dragging
     const handleStringDown = (e: any, stringName: string) => {
+      // Don't drag if Option/Cmd is held (let camera controls work)
+      if (e.altKey || e.metaKey) {
+        return
+      }
+      
       e.stopPropagation()
+      e.nativeEvent?.stopPropagation()
       setDraggedString(stringName)
       setDragStartPos(e.point.clone())
       gl.domElement.style.cursor = 'grabbing'
@@ -190,7 +196,14 @@ export default function MarionetteStrings({
 
     const handleStringMove = (e: any) => {
       if (!draggedString || !dragStartPos) return
+      // Don't drag if Option/Cmd is held (let camera controls work)
+      if (e.altKey || e.metaKey) {
+        setDraggedString(null)
+        setDragStartPos(null)
+        return
+      }
       e.stopPropagation()
+      e.nativeEvent?.stopPropagation()
       
       // Calculate pull amount based on vertical movement (pulling up = more pull)
       const dragDelta = e.point.clone().sub(dragStartPos)

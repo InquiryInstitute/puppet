@@ -63,7 +63,13 @@ export default function MarionetteControl({
 
   // Handle pointer down to start dragging
   const handlePointerDown = (e: any) => {
+    // Don't drag if Option/Cmd is held (let camera controls work)
+    if (e.altKey || e.metaKey) {
+      return
+    }
+    
     e.stopPropagation()
+    e.nativeEvent.stopPropagation()
     setIsDragging(true)
     
     // Store initial intersection point
@@ -84,7 +90,13 @@ export default function MarionetteControl({
   // Handle pointer move for dragging (called on the mesh)
   const handlePointerMove = (e: any) => {
     if (!isDragging || !controlRef.current) return
+    // Don't drag if Option/Cmd is held (let camera controls work)
+    if (e.altKey || e.metaKey) {
+      setIsDragging(false)
+      return
+    }
     e.stopPropagation()
+    e.nativeEvent.stopPropagation()
     
     // Use the intersection point from the event
     const delta = new THREE.Vector3().subVectors(e.point, previousPointRef.current)
