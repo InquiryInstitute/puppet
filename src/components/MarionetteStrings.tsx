@@ -313,6 +313,9 @@ export default function MarionetteStrings({
         // Generate points along the curve
         const curvePoints = curve.getPoints(30)
         
+        // Convert Vector3 points to [x, y, z] arrays for Line component
+        const pointsArray = curvePoints.map(p => [p.x, p.y, p.z] as [number, number, number])
+        
         // Create interactive hitboxes at key points along the string
         const hitboxPoints = [
           curvePoints[Math.floor(curvePoints.length * 0.25)],
@@ -323,11 +326,11 @@ export default function MarionetteStrings({
         return (
           <group key={config.name}>
             <Line
-              points={curvePoints}
+              points={pointsArray}
               color={config.color}
-              lineWidth={draggedString === config.name ? 2.5 : (config.isTaut ? 2.0 : 1.5)}
-              transparent
-              opacity={draggedString === config.name ? 1.0 : (config.isTaut ? 0.9 : 0.7)}
+              lineWidth={draggedString === config.name ? 5 : (config.isTaut ? 4 : 3)}
+              transparent={false}
+              opacity={1.0}
             />
             {/* Interactive hitboxes along the string - spheres for easier interaction */}
             {hitboxPoints.map((point, idx) => (
