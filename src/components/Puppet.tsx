@@ -290,6 +290,11 @@ export default function Puppet({ stringControls, controlBarRef, onStringPull }: 
         stringControls={stringControls}
         puppetPosition={[0, 0.625, 0]}
         onStringPull={onStringPull}
+        headRef={headRef}
+        leftForearmRef={leftForearmRef}
+        rightForearmRef={rightForearmRef}
+        leftShinRef={leftShinRef}
+        rightShinRef={rightShinRef}
       />
 
       {/* Torso (root of puppet hierarchy) */}

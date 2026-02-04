@@ -16,6 +16,12 @@ interface MarionetteStringsProps {
   }
   puppetPosition?: [number, number, number]
   onStringPull?: (stringName: string, pullAmount: number) => void
+  // Optional refs to actual body parts for precise attachment points
+  headRef?: React.RefObject<THREE.Group>
+  leftForearmRef?: React.RefObject<THREE.Group>
+  rightForearmRef?: React.RefObject<THREE.Group>
+  leftShinRef?: React.RefObject<THREE.Group>
+  rightShinRef?: React.RefObject<THREE.Group>
 }
 
 export default function MarionetteStrings({ 
@@ -23,7 +29,12 @@ export default function MarionetteStrings({
   controlBarRef,
   stringControls: _stringControls = {}, // Kept for interface compatibility but not used in length calculation
   puppetPosition = [0, 1, 0],
-  onStringPull
+  onStringPull,
+  headRef,
+  leftForearmRef,
+  rightForearmRef,
+  leftShinRef,
+  rightShinRef
 }: MarionetteStringsProps) {
   const stringsRef = useRef<THREE.Group>(null)
   const [stringLines, setStringLines] = useState<JSX.Element[]>([])
@@ -64,52 +75,53 @@ export default function MarionetteStrings({
       puppetWorldPos.set(...puppetPosition)
     }
 
-    // Puppet attachment points (based on actual puppet geometry)
-    // All positions are relative to the puppet group (which is at [0, 0.625, 0] in world space)
-    // Torso is at [0, 0, 0] relative to group, height=0.4 (so top at y=0.2, bottom at y=-0.2)
-    // Head is at [0, 0.4, 0] relative to torso, radius=0.15, so top of head is at y=0.4+0.15=0.55
-    const puppetHeadLocal = new THREE.Vector3(0, 0.55, 0) // Top of head sphere
+    // Get puppet attachment points - use refs if available for precise positions, otherwise calculate
+    const getWorldPositionFromRef = (ref: React.RefObject<THREE.Group> | undefined, offset: THREE.Vector3): THREE.Vector3 => {
+      if (ref?.current) {
+        const worldPos = new THREE.Vector3()
+        ref.current.getWorldPosition(worldPos)
+        // Apply offset in local space, then transform to world
+        const localOffset = offset.clone().applyQuaternion(ref.current.getWorldQuaternion(new THREE.Quaternion()))
+        return worldPos.add(localOffset)
+      }
+      // Fallback: calculate from puppet group
+      const localPos = offset.clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
+      return localPos
+    }
     
-    // Chest (torso top) - torso center at y=0, height=0.4, so top is y=0.2
-    const puppetChestLocal = new THREE.Vector3(0, 0.2, 0)
+    // Head: top of head sphere (head is at [0, 0.4, 0] relative to torso, sphere radius 0.15)
+    const puppetHeadPos = headRef 
+      ? getWorldPositionFromRef(headRef, new THREE.Vector3(0, 0.15, 0)) // Top of sphere
+      : new THREE.Vector3(0, 0.55, 0).clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
     
-    // Left hand: shoulder at [-0.15, 0.1, 0] relative to torso
-    // Upper arm extends from shoulder to [-0.15-0.18, 0.1, 0] = [-0.33, 0.1, 0]
-    // Forearm group is at [-0.18, 0, 0] relative to upper arm, so [-0.33, 0.1, 0] relative to group
-    // Forearm extends another 0.18, hand sphere is at [-0.18, 0, 0] relative to forearm group
-    // So hand is at [-0.33-0.18, 0.1, 0] = [-0.51, 0.1, 0] relative to group
-    const puppetLeftHandLocal = new THREE.Vector3(-0.51, 0.1, 0)
+    // Chest: top of torso (torso center at y=0, height=0.4, so top at y=0.2)
+    const puppetChestPos = new THREE.Vector3(0, 0.2, 0).clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
+    
+    // Left hand: end of forearm (hand sphere at [-0.18, 0, 0] relative to forearm group)
+    const puppetLeftHandPos = leftForearmRef
+      ? getWorldPositionFromRef(leftForearmRef, new THREE.Vector3(-0.18, 0, 0)) // Hand sphere position
+      : new THREE.Vector3(-0.51, 0.1, 0).clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
     
     // Right hand: mirror of left
-    const puppetRightHandLocal = new THREE.Vector3(0.51, 0.1, 0)
+    const puppetRightHandPos = rightForearmRef
+      ? getWorldPositionFromRef(rightForearmRef, new THREE.Vector3(0.18, 0, 0)) // Hand sphere position
+      : new THREE.Vector3(0.51, 0.1, 0).clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
     
     // Left shoulder: where arm attaches to torso
-    const puppetLeftShoulderLocal = new THREE.Vector3(-0.15, 0.1, 0)
+    const puppetLeftShoulderPos = new THREE.Vector3(-0.15, 0.1, 0).clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
     
     // Right shoulder
-    const puppetRightShoulderLocal = new THREE.Vector3(0.15, 0.1, 0)
+    const puppetRightShoulderPos = new THREE.Vector3(0.15, 0.1, 0).clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
     
-    // Left foot: hip at [-0.1, -0.2, 0] relative to torso
-    // Thigh extends down 0.2, so thigh end is at [-0.1, -0.2-0.2, 0] = [-0.1, -0.4, 0]
-    // Shin group is at [0, -0.2, 0] relative to thigh, so [-0.1, -0.4-0.2, 0] = [-0.1, -0.6, 0]
-    // Shin extends down 0.2, foot is at [0, -0.2, 0.05] relative to shin
-    // So foot is at [-0.1, -0.6-0.2, 0.05] = [-0.1, -0.8, 0.05] relative to group
-    const puppetLeftFootLocal = new THREE.Vector3(-0.1, -0.8, 0.05)
+    // Left foot: bottom of foot (foot is at [0, -0.2, 0.05] relative to shin)
+    const puppetLeftFootPos = leftShinRef
+      ? getWorldPositionFromRef(leftShinRef, new THREE.Vector3(0, -0.2, 0.05)) // Foot position
+      : new THREE.Vector3(-0.1, -0.8, 0.05).clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
     
     // Right foot: mirror of left
-    const puppetRightFootLocal = new THREE.Vector3(0.1, -0.8, 0.05)
-
-    // Transform to world space
-    // Note: puppetWorldPos is the center of the puppet group (at [0, 0.625, 0] in world)
-    // All local positions are relative to this group center
-    const puppetHeadPos = puppetHeadLocal.clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
-    const puppetChestPos = puppetChestLocal.clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
-    const puppetLeftHandPos = puppetLeftHandLocal.clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
-    const puppetRightHandPos = puppetRightHandLocal.clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
-    const puppetLeftShoulderPos = puppetLeftShoulderLocal.clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
-    const puppetRightShoulderPos = puppetRightShoulderLocal.clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
-    const puppetLeftFootPos = puppetLeftFootLocal.clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
-    const puppetRightFootPos = puppetRightFootLocal.clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
+    const puppetRightFootPos = rightShinRef
+      ? getWorldPositionFromRef(rightShinRef, new THREE.Vector3(0, -0.2, 0.05)) // Foot position
+      : new THREE.Vector3(0.1, -0.8, 0.05).clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
 
     // Control bar attachment points (matching smaller crossbar)
     // Coordinate system: X=left/right, Y=up/down, Z=forward/back
