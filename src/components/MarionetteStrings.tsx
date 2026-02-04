@@ -61,18 +61,18 @@ export default function MarionetteStrings({
     const puppetHeadLocal = new THREE.Vector3(0, 0.4 + 0.15, 0) // Head is at y=0.4, radius=0.15
     // Chest (torso top)
     const puppetChestLocal = new THREE.Vector3(0, 0.2, 0) // Torso center is at y=0, height=0.4, so top is y=0.2
-    // Left hand (upper arm at -0.25, forearm extends down, hand at end)
-    const puppetLeftHandLocal = new THREE.Vector3(-0.25, 0.1 - 0.15 - 0.12, 0) // Upper arm at y=0.1, forearm extends down 0.15, hand extends down 0.12
+    // Left hand (shoulder at -0.15, upper arm extends to -0.18, forearm to -0.36, hand at -0.36)
+    const puppetLeftHandLocal = new THREE.Vector3(-0.36, 0.1, 0) // Hand is at end of forearm
     // Right hand
-    const puppetRightHandLocal = new THREE.Vector3(0.25, 0.1 - 0.15 - 0.12, 0)
-    // Left shoulder
-    const puppetLeftShoulderLocal = new THREE.Vector3(-0.25, 0.1, 0) // Shoulder is where arm attaches
+    const puppetRightHandLocal = new THREE.Vector3(0.36, 0.1, 0)
+    // Left shoulder (where arm attaches to torso)
+    const puppetLeftShoulderLocal = new THREE.Vector3(-0.15, 0.1, 0)
     // Right shoulder
-    const puppetRightShoulderLocal = new THREE.Vector3(0.25, 0.1, 0)
-    // Left foot (thigh at -0.3, shin extends down, foot at end)
-    const puppetLeftFootLocal = new THREE.Vector3(-0.1, -0.3 - 0.15 - 0.12, 0.05) // Thigh at y=-0.3, shin extends down 0.15, foot extends down 0.12
+    const puppetRightShoulderLocal = new THREE.Vector3(0.15, 0.1, 0)
+    // Left foot (hip at -0.1, -0.2, thigh extends down 0.2, shin extends down 0.2, foot at end)
+    const puppetLeftFootLocal = new THREE.Vector3(-0.1, -0.2 - 0.2 - 0.2, 0.05) // Hip at y=-0.2, thigh 0.2, shin 0.2, foot at end
     // Right foot
-    const puppetRightFootLocal = new THREE.Vector3(0.1, -0.3 - 0.15 - 0.12, 0.05)
+    const puppetRightFootLocal = new THREE.Vector3(0.1, -0.2 - 0.2 - 0.2, 0.05)
 
     // Transform to world space
     const puppetHeadPos = puppetHeadLocal.clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)

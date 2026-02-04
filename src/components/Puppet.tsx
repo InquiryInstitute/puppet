@@ -30,7 +30,7 @@ export default function Puppet({ stringControls, controlBarRef }: PuppetProps) {
 
   // Gravity simulation
   const velocityRef = useRef(new THREE.Vector3(0, 0, 0))
-  const puppetBaseYRef = useRef(1.0) // Base Y position of puppet
+  const puppetBaseYRef = useRef(0.57) // Base Y position - feet should touch stage (stage at y=0, feet at -0.57 relative to torso)
   const GRAVITY = -9.81 * 0.1 // Scaled down for visual effect (m/s²)
   const DAMPING = 0.95 // Air resistance
   const STRING_LIFT_FORCE = 2.0 // How much strings can lift against gravity
@@ -67,7 +67,9 @@ export default function Puppet({ stringControls, controlBarRef }: PuppetProps) {
     puppetBaseYRef.current += velocityRef.current.y * delta
     
     // Floor collision - puppet can't fall below stage
-    const floorY = 0.5 // Stage surface is at y=0, puppet base should be above it
+    // Feet are at y = -0.57 relative to torso (torso at y=0, feet extend down 0.57)
+    // Stage is at y=0, so puppet base (torso center) must be at least 0.57 above stage
+    const floorY = 0.57 // Minimum height so feet touch stage
     if (puppetBaseYRef.current < floorY) {
       puppetBaseYRef.current = floorY
       velocityRef.current.y = 0
@@ -174,13 +176,13 @@ export default function Puppet({ stringControls, controlBarRef }: PuppetProps) {
   })
 
   return (
-    <group ref={groupRef} position={[0, 1, 0]}>
+    <group ref={groupRef} position={[0, 0.57, 0]}>
       {/* Marionette strings */}
       <MarionetteStrings 
         puppetRef={groupRef} 
         controlBarRef={controlBarRef}
         stringControls={stringControls}
-        puppetPosition={[0, 1, 0]}
+        puppetPosition={[0, 0.57, 0]}
       />
 
       {/* Torso (root of puppet hierarchy) */}
@@ -192,6 +194,11 @@ export default function Puppet({ stringControls, controlBarRef }: PuppetProps) {
 
         {/* Head (child of torso) */}
         <group ref={headRef} position={[0, 0.4, 0]}>
+          {/* Neck connector */}
+          <mesh position={[0, -0.1, 0]} castShadow>
+            <cylinderGeometry args={[0.02, 0.02, 0.1, 8]} />
+            <meshStandardMaterial color="#fdbcb4" />
+          </mesh>
           <mesh castShadow>
             <sphereGeometry args={[0.15, 16, 16]} />
             <meshStandardMaterial color="#fdbcb4" />
@@ -199,20 +206,30 @@ export default function Puppet({ stringControls, controlBarRef }: PuppetProps) {
         </group>
 
         {/* Left Arm (child of torso) with elbow joint */}
-        <group ref={leftUpperArmRef} position={[-0.25, 0.1, 0]}>
+        <group ref={leftUpperArmRef} position={[-0.15, 0.1, 0]}>
+          {/* Shoulder connector */}
+          <mesh position={[0, 0, 0]} castShadow>
+            <sphereGeometry args={[0.04, 8, 8]} />
+            <meshStandardMaterial color="#fdbcb4" />
+          </mesh>
           {/* Upper arm */}
-          <mesh castShadow>
+          <mesh position={[-0.09, 0, 0]} castShadow>
             <cylinderGeometry args={[0.03, 0.03, 0.18, 8]} />
             <meshStandardMaterial color="#fdbcb4" />
           </mesh>
           {/* Forearm (with elbow joint) */}
-          <group ref={leftForearmRef} position={[0, -0.15, 0]}>
-            <mesh castShadow>
+          <group ref={leftForearmRef} position={[-0.18, 0, 0]}>
+            {/* Elbow connector */}
+            <mesh position={[0, 0, 0]} castShadow>
+              <sphereGeometry args={[0.03, 8, 8]} />
+              <meshStandardMaterial color="#fdbcb4" />
+            </mesh>
+            <mesh position={[-0.09, 0, 0]} castShadow>
               <cylinderGeometry args={[0.025, 0.025, 0.18, 8]} />
               <meshStandardMaterial color="#fdbcb4" />
             </mesh>
             {/* Hand */}
-            <mesh position={[0, -0.12, 0]} castShadow>
+            <mesh position={[-0.18, 0, 0]} castShadow>
               <sphereGeometry args={[0.05, 8, 8]} />
               <meshStandardMaterial color="#fdbcb4" />
             </mesh>
@@ -220,20 +237,30 @@ export default function Puppet({ stringControls, controlBarRef }: PuppetProps) {
         </group>
 
         {/* Right Arm (child of torso) with elbow joint */}
-        <group ref={rightUpperArmRef} position={[0.25, 0.1, 0]}>
+        <group ref={rightUpperArmRef} position={[0.15, 0.1, 0]}>
+          {/* Shoulder connector */}
+          <mesh position={[0, 0, 0]} castShadow>
+            <sphereGeometry args={[0.04, 8, 8]} />
+            <meshStandardMaterial color="#fdbcb4" />
+          </mesh>
           {/* Upper arm */}
-          <mesh castShadow>
+          <mesh position={[0.09, 0, 0]} castShadow>
             <cylinderGeometry args={[0.03, 0.03, 0.18, 8]} />
             <meshStandardMaterial color="#fdbcb4" />
           </mesh>
           {/* Forearm (with elbow joint) */}
-          <group ref={rightForearmRef} position={[0, -0.15, 0]}>
-            <mesh castShadow>
+          <group ref={rightForearmRef} position={[0.18, 0, 0]}>
+            {/* Elbow connector */}
+            <mesh position={[0, 0, 0]} castShadow>
+              <sphereGeometry args={[0.03, 8, 8]} />
+              <meshStandardMaterial color="#fdbcb4" />
+            </mesh>
+            <mesh position={[0.09, 0, 0]} castShadow>
               <cylinderGeometry args={[0.025, 0.025, 0.18, 8]} />
               <meshStandardMaterial color="#fdbcb4" />
             </mesh>
             {/* Hand */}
-            <mesh position={[0, -0.12, 0]} castShadow>
+            <mesh position={[0.18, 0, 0]} castShadow>
               <sphereGeometry args={[0.05, 8, 8]} />
               <meshStandardMaterial color="#fdbcb4" />
             </mesh>
@@ -241,20 +268,30 @@ export default function Puppet({ stringControls, controlBarRef }: PuppetProps) {
         </group>
 
         {/* Left Leg (child of torso) with knee joint */}
-        <group ref={leftThighRef} position={[-0.1, -0.3, 0]}>
+        <group ref={leftThighRef} position={[-0.1, -0.2, 0]}>
+          {/* Hip connector */}
+          <mesh position={[0, 0, 0]} castShadow>
+            <sphereGeometry args={[0.05, 8, 8]} />
+            <meshStandardMaterial color="#2d3748" />
+          </mesh>
           {/* Thigh */}
-          <mesh castShadow>
+          <mesh position={[0, -0.1, 0]} castShadow>
             <cylinderGeometry args={[0.04, 0.04, 0.2, 8]} />
             <meshStandardMaterial color="#2d3748" />
           </mesh>
           {/* Shin (with knee joint) */}
-          <group ref={leftShinRef} position={[0, -0.15, 0]}>
-            <mesh castShadow>
+          <group ref={leftShinRef} position={[0, -0.2, 0]}>
+            {/* Knee connector */}
+            <mesh position={[0, 0, 0]} castShadow>
+              <sphereGeometry args={[0.04, 8, 8]} />
+              <meshStandardMaterial color="#2d3748" />
+            </mesh>
+            <mesh position={[0, -0.1, 0]} castShadow>
               <cylinderGeometry args={[0.035, 0.035, 0.2, 8]} />
               <meshStandardMaterial color="#2d3748" />
             </mesh>
             {/* Foot */}
-            <mesh position={[0, -0.12, 0.05]} castShadow>
+            <mesh position={[0, -0.2, 0.05]} castShadow>
               <boxGeometry args={[0.08, 0.05, 0.15]} />
               <meshStandardMaterial color="#1a202c" />
             </mesh>
@@ -262,20 +299,30 @@ export default function Puppet({ stringControls, controlBarRef }: PuppetProps) {
         </group>
 
         {/* Right Leg (child of torso) with knee joint */}
-        <group ref={rightThighRef} position={[0.1, -0.3, 0]}>
+        <group ref={rightThighRef} position={[0.1, -0.2, 0]}>
+          {/* Hip connector */}
+          <mesh position={[0, 0, 0]} castShadow>
+            <sphereGeometry args={[0.05, 8, 8]} />
+            <meshStandardMaterial color="#2d3748" />
+          </mesh>
           {/* Thigh */}
-          <mesh castShadow>
+          <mesh position={[0, -0.1, 0]} castShadow>
             <cylinderGeometry args={[0.04, 0.04, 0.2, 8]} />
             <meshStandardMaterial color="#2d3748" />
           </mesh>
           {/* Shin (with knee joint) */}
-          <group ref={rightShinRef} position={[0, -0.15, 0]}>
-            <mesh castShadow>
+          <group ref={rightShinRef} position={[0, -0.2, 0]}>
+            {/* Knee connector */}
+            <mesh position={[0, 0, 0]} castShadow>
+              <sphereGeometry args={[0.04, 8, 8]} />
+              <meshStandardMaterial color="#2d3748" />
+            </mesh>
+            <mesh position={[0, -0.1, 0]} castShadow>
               <cylinderGeometry args={[0.035, 0.035, 0.2, 8]} />
               <meshStandardMaterial color="#2d3748" />
             </mesh>
             {/* Foot */}
-            <mesh position={[0, -0.12, 0.05]} castShadow>
+            <mesh position={[0, -0.2, 0.05]} castShadow>
               <boxGeometry args={[0.08, 0.05, 0.15]} />
               <meshStandardMaterial color="#1a202c" />
             </mesh>
