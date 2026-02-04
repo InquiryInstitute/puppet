@@ -180,67 +180,101 @@ export default function MarionetteStrings({
       front: controlFrontPos.clone(),
       back: controlBackPos.clone(),
     }
+    
+    // Log coordinates for debugging (every 60 frames to avoid spam)
+    if (stringsRef.current && Math.floor(Date.now() / 100) % 6 === 0) {
+      console.log('=== String Coordinates Debug ===')
+      console.log('Control Bar Positions:', {
+        center: { x: controlCenterPos.x.toFixed(3), y: controlCenterPos.y.toFixed(3), z: controlCenterPos.z.toFixed(3) },
+        left: { x: controlLeftPos.x.toFixed(3), y: controlLeftPos.y.toFixed(3), z: controlLeftPos.z.toFixed(3) },
+        right: { x: controlRightPos.x.toFixed(3), y: controlRightPos.y.toFixed(3), z: controlRightPos.z.toFixed(3) },
+        front: { x: controlFrontPos.x.toFixed(3), y: controlFrontPos.y.toFixed(3), z: controlFrontPos.z.toFixed(3) },
+        back: { x: controlBackPos.x.toFixed(3), y: controlBackPos.y.toFixed(3), z: controlBackPos.z.toFixed(3) },
+      })
+      console.log('Puppet Positions:', {
+        head: { x: puppetHeadPos.x.toFixed(3), y: puppetHeadPos.y.toFixed(3), z: puppetHeadPos.z.toFixed(3) },
+        chest: { x: puppetChestPos.x.toFixed(3), y: puppetChestPos.y.toFixed(3), z: puppetChestPos.z.toFixed(3) },
+        leftHand: { x: puppetLeftHandPos.x.toFixed(3), y: puppetLeftHandPos.y.toFixed(3), z: puppetLeftHandPos.z.toFixed(3) },
+        rightHand: { x: puppetRightHandPos.x.toFixed(3), y: puppetRightHandPos.y.toFixed(3), z: puppetRightHandPos.z.toFixed(3) },
+        leftShoulder: { x: puppetLeftShoulderPos.x.toFixed(3), y: puppetLeftShoulderPos.y.toFixed(3), z: puppetLeftShoulderPos.z.toFixed(3) },
+        rightShoulder: { x: puppetRightShoulderPos.x.toFixed(3), y: puppetRightShoulderPos.y.toFixed(3), z: puppetRightShoulderPos.z.toFixed(3) },
+        leftFoot: { x: puppetLeftFootPos.x.toFixed(3), y: puppetLeftFootPos.y.toFixed(3), z: puppetLeftFootPos.z.toFixed(3) },
+        rightFoot: { x: puppetRightFootPos.x.toFixed(3), y: puppetRightFootPos.y.toFixed(3), z: puppetRightFootPos.z.toFixed(3) },
+      })
+    }
 
     // All 8 strings from MuJoCo model - connect directly to control bar attachment points
-    // Use the exact same cloned positions as the debug spheres (from refs)
+    // Use the directly calculated positions (same values stored in refs, but fresh from this frame)
     const stringConfigs = [
       {
         name: 'head',
-        start: puppetPositionsRef.current.head!.clone(), // Use exact same position as debug sphere
-        end: controlBarPositionsRef.current.center!.clone(), // Use exact same position as debug sphere
+        start: puppetHeadPos.clone(), // Use directly calculated position
+        end: controlCenterPos.clone(), // Use directly calculated position
         color: '#ff6b6b',
         visible: true,
       },
       {
         name: 'chest',
-        start: puppetPositionsRef.current.chest!.clone(), // Use exact same position as debug sphere
-        end: controlBarPositionsRef.current.center!.clone(), // Use exact same position as debug sphere
+        start: puppetChestPos.clone(), // Use directly calculated position
+        end: controlCenterPos.clone(), // Use directly calculated position
         color: '#ff8c8c',
         visible: true,
       },
       {
         name: 'leftHand',
-        start: puppetPositionsRef.current.leftHand!.clone(), // Use exact same position as debug sphere
-        end: controlBarPositionsRef.current.left!.clone(), // Use exact same position as debug sphere
+        start: puppetLeftHandPos.clone(), // Use directly calculated position
+        end: controlLeftPos.clone(), // Use directly calculated position
         color: '#4ecdc4',
         visible: true,
       },
       {
         name: 'rightHand',
-        start: puppetPositionsRef.current.rightHand!.clone(), // Use exact same position as debug sphere
-        end: controlBarPositionsRef.current.right!.clone(), // Use exact same position as debug sphere
+        start: puppetRightHandPos.clone(), // Use directly calculated position
+        end: controlRightPos.clone(), // Use directly calculated position
         color: '#45b7d1',
         visible: true,
       },
       {
         name: 'leftShoulder',
-        start: puppetPositionsRef.current.leftShoulder!.clone(), // Use exact same position as debug sphere
-        end: controlBarPositionsRef.current.front!.clone(), // Use exact same position as debug sphere
+        start: puppetLeftShoulderPos.clone(), // Use directly calculated position
+        end: controlFrontPos.clone(), // Use directly calculated position
         color: '#96ceb4',
         visible: true,
       },
       {
         name: 'rightShoulder',
-        start: puppetPositionsRef.current.rightShoulder!.clone(), // Use exact same position as debug sphere
-        end: controlBarPositionsRef.current.back!.clone(), // Use exact same position as debug sphere
+        start: puppetRightShoulderPos.clone(), // Use directly calculated position
+        end: controlBackPos.clone(), // Use directly calculated position
         color: '#a8d5ba',
         visible: true,
       },
       {
         name: 'leftFoot',
-        start: puppetPositionsRef.current.leftFoot!.clone(), // Use exact same position as debug sphere
-        end: controlBarPositionsRef.current.front!.clone(), // Use exact same position as debug sphere
+        start: puppetLeftFootPos.clone(), // Use directly calculated position
+        end: controlFrontPos.clone(), // Use directly calculated position
         color: '#ffeaa7',
         visible: true,
       },
       {
         name: 'rightFoot',
-        start: puppetPositionsRef.current.rightFoot!.clone(), // Use exact same position as debug sphere
-        end: controlBarPositionsRef.current.back!.clone(), // Use exact same position as debug sphere
+        start: puppetRightFootPos.clone(), // Use directly calculated position
+        end: controlBackPos.clone(), // Use directly calculated position
         color: '#fdcb6e',
         visible: true,
       },
     ]
+    
+    // Log string coordinates for debugging (every 60 frames to avoid spam)
+    if (stringsRef.current && Math.floor(Date.now() / 100) % 6 === 0) {
+      console.log('=== String Start/End Coordinates ===')
+      stringConfigs.forEach(config => {
+        console.log(`${config.name}:`, {
+          start: { x: config.start.x.toFixed(3), y: config.start.y.toFixed(3), z: config.start.z.toFixed(3) },
+          end: { x: config.end.x.toFixed(3), y: config.end.y.toFixed(3), z: config.end.z.toFixed(3) },
+          distance: config.start.distanceTo(config.end).toFixed(3),
+        })
+      })
+    }
 
     // Handle string dragging
     const handleStringDown = (e: any, stringName: string) => {
@@ -298,22 +332,28 @@ export default function MarionetteStrings({
           .multiplyScalar(0.5)
         
         // Add sag based on string length (longer strings sag more)
+        // Reduced sag to prevent stretching appearance
         const stringLength = config.start.distanceTo(config.end)
-        const sagAmount = Math.max(0.02, stringLength * 0.08) // 8% sag, minimum 2cm
+        const sagAmount = Math.max(0.01, stringLength * 0.03) // 3% sag, minimum 1cm (reduced from 8%)
         
         // Sag downward (negative Y) to simulate gravity
         const controlPoint = midPoint.clone()
         controlPoint.y -= sagAmount
         
         // Create curve with multiple points for smooth flexible appearance
+        // Ensure curve starts and ends exactly at attachment points
         const curve = new THREE.QuadraticBezierCurve3(
-          config.start,
+          config.start.clone(), // Explicit clone to ensure exact position
           controlPoint,
-          config.end
+          config.end.clone() // Explicit clone to ensure exact position
         )
         
-        // Generate points along the curve
+        // Generate points along the curve, ensuring first and last points are exact
         const curvePoints = curve.getPoints(30)
+        // Ensure first point is exactly at start
+        curvePoints[0].copy(config.start)
+        // Ensure last point is exactly at end
+        curvePoints[curvePoints.length - 1].copy(config.end)
         
         // Convert Vector3 points to [x, y, z] arrays for Line component
         const pointsArray = curvePoints.map(p => [p.x, p.y, p.z] as [number, number, number])
