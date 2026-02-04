@@ -26,3 +26,8 @@ dist-ssr
 # MuJoCo WASM files (will be downloaded)
 public/mujoco/*.wasm
 public/mujoco/*.data
+
+# Environment variables
+.env
+.env.local
+.env.production
