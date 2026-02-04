@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import Puppet from './Puppet'
 import MarionetteControl from './MarionetteControl'
+import CoordinateAxes from './CoordinateAxes'
 import { useMuJoCo } from '../mujoco/useMuJoCo'
 import { useLLMController } from '../llm/useLLMController'
 import { createWoodTexture } from '../utils/woodTexture'
@@ -102,6 +103,12 @@ export default function PuppetScene({ command }: PuppetSceneProps) {
 
   return (
     <>
+      {/* Coordinate axes at origin for reference */}
+      <CoordinateAxes position={[0, 0.1, 0]} size={0.3} showLabels={true} showRotationArrows={true} />
+      
+      {/* Coordinate axes at control bar position */}
+      <CoordinateAxes position={[0, 2.5, 0]} size={0.2} showLabels={true} showRotationArrows={false} />
+      
       {/* Stage surface with wood texture */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <planeGeometry args={[10, 10]} />
