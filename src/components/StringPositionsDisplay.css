@@ -1,22 +1,22 @@
 .string-positions-display {
   position: absolute;
-  bottom: 10px;
-  left: 10px;
+  top: 10px;
+  right: 10px;
   background-color: rgba(0, 0, 0, 0.7);
   color: white;
   padding: 10px;
   border-radius: 5px;
-  font-family: 'monospace', sans-serif;
+  font-family: 'Courier New', monospace;
   font-size: 0.75em;
   z-index: 1000;
-  max-width: 90vw;
+  max-width: 80vw;
   overflow-x: auto;
 }
 
 .positions-table {
   border-collapse: collapse;
   width: 100%;
-  min-width: 800px;
+  min-width: 600px;
 }
 
 .positions-table th,
@@ -26,27 +26,26 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.row-header {
+.positions-table th {
+  background-color: rgba(255, 255, 255, 0.1);
   font-weight: bold;
   color: #a0aec0;
-  background-color: rgba(0, 0, 0, 0.3);
 }
 
-.column-header {
-  font-weight: bold;
-  color: #a0aec0;
-  background-color: rgba(0, 0, 0, 0.3);
-  text-align: center;
-}
-
-.row-label {
+.positions-table .row-label {
+  background-color: rgba(255, 255, 255, 0.15);
   font-weight: bold;
   color: #e2e8f0;
-  background-color: rgba(0, 0, 0, 0.2);
+  min-width: 100px;
 }
 
-.position-cell {
+.positions-table .control-point-header {
+  text-align: center;
+  min-width: 120px;
+}
+
+.positions-table .position-cell {
+  text-align: center;
   color: #cbd5e0;
   font-size: 0.9em;
-  white-space: nowrap;
 }

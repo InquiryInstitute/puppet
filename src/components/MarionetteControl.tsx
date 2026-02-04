@@ -65,10 +65,16 @@ export default function MarionetteControl({
         e.preventDefault()
       }
       pressedKeysRef.current.add(e.key)
+      // Also track modifier keys
+      if (e.altKey) pressedKeysRef.current.add('Alt')
+      if (e.metaKey) pressedKeysRef.current.add('Meta')
     }
     
     const handleKeyUp = (e: KeyboardEvent) => {
       pressedKeysRef.current.delete(e.key)
+      // Also track modifier keys
+      if (!e.altKey) pressedKeysRef.current.delete('Alt')
+      if (!e.metaKey) pressedKeysRef.current.delete('Meta')
     }
     
     window.addEventListener('keydown', handleKeyDown)
@@ -89,22 +95,24 @@ export default function MarionetteControl({
     setControlPosition(prev => {
       const newPos = prev.clone()
       
-      // Arrow keys: translate Left/Right/Up/Down
-      if (pressedKeys.has('ArrowLeft')) {
-        newPos.x -= MOVE_SPEED * delta
-      }
-      if (pressedKeys.has('ArrowRight')) {
-        newPos.x += MOVE_SPEED * delta
-      }
-      if (pressedKeys.has('ArrowUp') && !pressedKeys.has('Control')) {
-        newPos.y += MOVE_SPEED * delta
-      }
-      if (pressedKeys.has('ArrowDown') && !pressedKeys.has('Control')) {
-        newPos.y -= MOVE_SPEED * delta
+      // Arrow keys: translate Left/Right/Up/Down (only when Option is not pressed)
+      if (!pressedKeys.has('Alt')) {
+        if (pressedKeys.has('ArrowLeft')) {
+          newPos.x -= MOVE_SPEED * delta
+        }
+        if (pressedKeys.has('ArrowRight')) {
+          newPos.x += MOVE_SPEED * delta
+        }
+        if (pressedKeys.has('ArrowUp')) {
+          newPos.y += MOVE_SPEED * delta
+        }
+        if (pressedKeys.has('ArrowDown')) {
+          newPos.y -= MOVE_SPEED * delta
+        }
       }
       
-      // Ctrl + Up/Down: move in Z (forward/back)
-      if (pressedKeys.has('Control')) {
+      // Option + Up/Down: move in Z (forward/back)
+      if (pressedKeys.has('Alt') && !pressedKeys.has('Meta')) {
         if (pressedKeys.has('ArrowUp')) {
           newPos.z += MOVE_SPEED * delta
         }
@@ -119,30 +127,31 @@ export default function MarionetteControl({
     setControlRotation(prev => {
       const newRot = prev.clone()
       
-      // Shift + arrows: rotate control bar around its own center
-      if (pressedKeys.has('Shift')) {
-        // Shift + Left/Right: rotate around Y axis (spin the control bar)
+      // Option + arrows: rotate control bar (tilt and pitch)
+      if (pressedKeys.has('Alt') && !pressedKeys.has('Meta')) {
+        // Option + Left/Right: rotate around Y axis (yaw/tilt)
         if (pressedKeys.has('ArrowLeft')) {
           newRot.y += ROTATE_SPEED * delta
         }
         if (pressedKeys.has('ArrowRight')) {
           newRot.y -= ROTATE_SPEED * delta
         }
-        // Shift + Up/Down: rotate around X axis (tilt forward/back)
-        if (pressedKeys.has('ArrowUp') && !pressedKeys.has('Control')) {
+        // Option + Up/Down: rotate around X axis (pitch)
+        if (pressedKeys.has('ArrowUp')) {
           newRot.x += ROTATE_SPEED * delta
         }
-        if (pressedKeys.has('ArrowDown') && !pressedKeys.has('Control')) {
+        if (pressedKeys.has('ArrowDown')) {
           newRot.x -= ROTATE_SPEED * delta
         }
-        // Shift + Ctrl + Left/Right: rotate around Z axis (tilt left/right)
-        if (pressedKeys.has('Control')) {
-          if (pressedKeys.has('ArrowLeft')) {
-            newRot.z += ROTATE_SPEED * delta
-          }
-          if (pressedKeys.has('ArrowRight')) {
-            newRot.z -= ROTATE_SPEED * delta
-          }
+      }
+      
+      // Cmd + Option + Left/Right: rotate around Z axis (roll)
+      if (pressedKeys.has('Alt') && pressedKeys.has('Meta')) {
+        if (pressedKeys.has('ArrowLeft')) {
+          newRot.z += ROTATE_SPEED * delta
+        }
+        if (pressedKeys.has('ArrowRight')) {
+          newRot.z -= ROTATE_SPEED * delta
         }
       }
       

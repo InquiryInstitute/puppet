@@ -267,7 +267,7 @@ export default function MarionetteStrings({
     ]
     
     // Report positions to parent component for display
-    if (onPositionsChange && stringsRef.current) {
+    if (onPositionsChange) {
       onPositionsChange({
         controller: {
           head: { x: controlCenterPos.x, y: controlCenterPos.y, z: controlCenterPos.z },
