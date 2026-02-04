@@ -3,6 +3,7 @@ import { Canvas } from '@react-three/fiber'
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei'
 import PuppetScene from './components/PuppetScene'
 import ControlBarDisplay from './components/ControlBarDisplay'
+import CameraTracker from './components/CameraTracker'
 import './App.css'
 
 function App() {
@@ -10,12 +11,19 @@ function App() {
     position: { x: 0, y: 2.5, z: 0 },
     rotation: { roll: 0, pitch: 0, yaw: 0 }
   })
+  
+  const [cameraState, setCameraState] = useState<{
+    position: { x: number; y: number; z: number }
+    rotation: { roll: number; pitch: number; yaw: number }
+  } | null>(null)
 
   return (
     <div className="app">
       <ControlBarDisplay 
-        position={controlBarState.position}
-        rotation={controlBarState.rotation}
+        controlBarPosition={controlBarState.position}
+        controlBarRotation={controlBarState.rotation}
+        cameraPosition={cameraState?.position}
+        cameraRotation={cameraState?.rotation}
       />
       <div className="canvas-container">
         <Canvas shadows>
@@ -32,6 +40,9 @@ function App() {
             command="" 
             isExecuting={false}
             onControlBarStateChange={(pos, rot) => setControlBarState({ position: pos, rotation: rot })}
+          />
+          <CameraTracker 
+            onCameraStateChange={(pos, rot) => setCameraState({ position: pos, rotation: rot })}
           />
           <OrbitControls
             enablePan={true}

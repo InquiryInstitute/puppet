@@ -1,30 +1,62 @@
 import './ControlBarDisplay.css'
 
 interface ControlBarDisplayProps {
-  position: { x: number; y: number; z: number }
-  rotation: { roll: number; pitch: number; yaw: number }
+  controlBarPosition: { x: number; y: number; z: number }
+  controlBarRotation: { roll: number; pitch: number; yaw: number }
+  cameraPosition?: { x: number; y: number; z: number }
+  cameraRotation?: { roll: number; pitch: number; yaw: number }
 }
 
-export default function ControlBarDisplay({ position, rotation }: ControlBarDisplayProps) {
+export default function ControlBarDisplay({ 
+  controlBarPosition, 
+  controlBarRotation,
+  cameraPosition,
+  cameraRotation
+}: ControlBarDisplayProps) {
   // Convert radians to degrees for display
-  const rollDeg = (rotation.roll * 180 / Math.PI).toFixed(1)
-  const pitchDeg = (rotation.pitch * 180 / Math.PI).toFixed(1)
-  const yawDeg = (rotation.yaw * 180 / Math.PI).toFixed(1)
+  const controlRollDeg = (controlBarRotation.roll * 180 / Math.PI).toFixed(1)
+  const controlPitchDeg = (controlBarRotation.pitch * 180 / Math.PI).toFixed(1)
+  const controlYawDeg = (controlBarRotation.yaw * 180 / Math.PI).toFixed(1)
+
+  const cameraRollDeg = cameraRotation ? (cameraRotation.roll * 180 / Math.PI).toFixed(1) : '0.0'
+  const cameraPitchDeg = cameraRotation ? (cameraRotation.pitch * 180 / Math.PI).toFixed(1) : '0.0'
+  const cameraYawDeg = cameraRotation ? (cameraRotation.yaw * 180 / Math.PI).toFixed(1) : '0.0'
 
   return (
     <div className="control-bar-display">
-      <div className="display-section">
-        <span className="label">Position:</span>
-        <span className="value">X: {position.x.toFixed(2)}</span>
-        <span className="value">Y: {position.y.toFixed(2)}</span>
-        <span className="value">Z: {position.z.toFixed(2)}</span>
+      {/* Control Bar Info */}
+      <div className="display-group">
+        <div className="display-section">
+          <span className="label">Control Bar Position:</span>
+          <span className="value">X: {controlBarPosition.x.toFixed(2)}</span>
+          <span className="value">Y: {controlBarPosition.y.toFixed(2)}</span>
+          <span className="value">Z: {controlBarPosition.z.toFixed(2)}</span>
+        </div>
+        <div className="display-section">
+          <span className="label">Control Bar Rotation:</span>
+          <span className="value">Roll: {controlRollDeg}°</span>
+          <span className="value">Pitch: {controlPitchDeg}°</span>
+          <span className="value">Yaw: {controlYawDeg}°</span>
+        </div>
       </div>
-      <div className="display-section">
-        <span className="label">Rotation:</span>
-        <span className="value">Roll: {rollDeg}°</span>
-        <span className="value">Pitch: {pitchDeg}°</span>
-        <span className="value">Yaw: {yawDeg}°</span>
-      </div>
+      
+      {/* Camera Info */}
+      {cameraPosition && cameraRotation && (
+        <div className="display-group">
+          <div className="display-section">
+            <span className="label">Camera Position:</span>
+            <span className="value">X: {cameraPosition.x.toFixed(2)}</span>
+            <span className="value">Y: {cameraPosition.y.toFixed(2)}</span>
+            <span className="value">Z: {cameraPosition.z.toFixed(2)}</span>
+          </div>
+          <div className="display-section">
+            <span className="label">Camera Rotation:</span>
+            <span className="value">Roll: {cameraRollDeg}°</span>
+            <span className="value">Pitch: {cameraPitchDeg}°</span>
+            <span className="value">Yaw: {cameraYawDeg}°</span>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
