@@ -41,6 +41,15 @@ export default function MarionetteStrings({
   const [draggedString, setDraggedString] = useState<string | null>(null)
   const [dragStartPos, setDragStartPos] = useState<THREE.Vector3 | null>(null)
   const { gl } = useThree()
+  
+  // Store control bar positions to share with debug spheres
+  const controlBarPositionsRef = useRef<{
+    center?: THREE.Vector3
+    left?: THREE.Vector3
+    right?: THREE.Vector3
+    front?: THREE.Vector3
+    back?: THREE.Vector3
+  }>({})
 
   useFrame(() => {
     if (!puppetRef.current) {
@@ -133,69 +142,78 @@ export default function MarionetteStrings({
     // h_back for right shoulder and right foot - back of crossbar (-Z, away from camera)
     const controlBackLocal = new THREE.Vector3(0, 0, -0.06)
 
-    // Transform to world space
-    const controlCenterPos = controlCenterLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
-    const controlLeftPos = controlLeftLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
-    const controlRightPos = controlRightLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
-    const controlFrontPos = controlFrontLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
-    const controlBackPos = controlBackLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
+    // Transform to world space - create new Vector3 instances to avoid mutation
+    const controlCenterPos = new THREE.Vector3().copy(controlCenterLocal).applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
+    const controlLeftPos = new THREE.Vector3().copy(controlLeftLocal).applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
+    const controlRightPos = new THREE.Vector3().copy(controlRightLocal).applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
+    const controlFrontPos = new THREE.Vector3().copy(controlFrontLocal).applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
+    const controlBackPos = new THREE.Vector3().copy(controlBackLocal).applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
+    
+    // Store positions for debug spheres to use
+    controlBarPositionsRef.current = {
+      center: controlCenterPos.clone(),
+      left: controlLeftPos.clone(),
+      right: controlRightPos.clone(),
+      front: controlFrontPos.clone(),
+      back: controlBackPos.clone(),
+    }
 
     // All 8 strings from MuJoCo model - connect directly to control bar attachment points
-    // For now, always connect to the actual control bar positions (same as debug spheres)
+    // Use the exact same positions as the debug spheres
     const stringConfigs = [
       {
         name: 'head',
         start: puppetHeadPos,
-        end: controlCenterPos.clone(), // Direct connection to control bar
+        end: controlCenterPos, // Use same position as debug sphere
         color: '#ff6b6b',
         visible: true,
       },
       {
         name: 'chest',
         start: puppetChestPos,
-        end: controlCenterPos.clone(), // Direct connection to control bar
+        end: controlCenterPos, // Use same position as debug sphere
         color: '#ff8c8c',
         visible: true,
       },
       {
         name: 'leftHand',
         start: puppetLeftHandPos,
-        end: controlLeftPos.clone(), // Direct connection to control bar
+        end: controlLeftPos, // Use same position as debug sphere
         color: '#4ecdc4',
         visible: true,
       },
       {
         name: 'rightHand',
         start: puppetRightHandPos,
-        end: controlRightPos.clone(), // Direct connection to control bar
+        end: controlRightPos, // Use same position as debug sphere
         color: '#45b7d1',
         visible: true,
       },
       {
         name: 'leftShoulder',
         start: puppetLeftShoulderPos,
-        end: controlFrontPos.clone(), // Direct connection to control bar
+        end: controlFrontPos, // Use same position as debug sphere
         color: '#96ceb4',
         visible: true,
       },
       {
         name: 'rightShoulder',
         start: puppetRightShoulderPos,
-        end: controlBackPos.clone(), // Direct connection to control bar
+        end: controlBackPos, // Use same position as debug sphere
         color: '#a8d5ba',
         visible: true,
       },
       {
         name: 'leftFoot',
         start: puppetLeftFootPos,
-        end: controlFrontPos.clone(), // Direct connection to control bar
+        end: controlFrontPos, // Use same position as debug sphere
         color: '#ffeaa7',
         visible: true,
       },
       {
         name: 'rightFoot',
         start: puppetRightFootPos,
-        end: controlBackPos.clone(), // Direct connection to control bar
+        end: controlBackPos, // Use same position as debug sphere
         color: '#fdcb6e',
         visible: true,
       },
@@ -318,50 +336,39 @@ export default function MarionetteStrings({
   return (
     <group ref={stringsRef}>
       {stringLines}
-      {/* Debug: Show attachment points as small spheres */}
-      {controlBarRef?.current && (() => {
-        const controlBarWorldPos = new THREE.Vector3()
-        const controlBarWorldQuat = new THREE.Quaternion()
-        controlBarRef.current!.getWorldPosition(controlBarWorldPos)
-        controlBarRef.current!.getWorldQuaternion(controlBarWorldQuat)
-        
-        const controlCenterLocal = new THREE.Vector3(0, 0, -0.20)
-        const controlLeftLocal = new THREE.Vector3(-0.12, 0, 0)
-        const controlRightLocal = new THREE.Vector3(0.12, 0, 0)
-        const controlFrontLocal = new THREE.Vector3(0, 0, 0.06)
-        const controlBackLocal = new THREE.Vector3(0, 0, -0.06)
-        
-        const controlCenterPos = controlCenterLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
-        const controlLeftPos = controlLeftLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
-        const controlRightPos = controlRightLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
-        const controlFrontPos = controlFrontLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
-        const controlBackPos = controlBackLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
-        
-        return (
-          <>
-            <mesh position={[controlCenterPos.x, controlCenterPos.y, controlCenterPos.z]}>
-              <sphereGeometry args={[0.02, 8, 8]} />
-              <meshStandardMaterial color="yellow" emissive="yellow" emissiveIntensity={0.5} />
-            </mesh>
-            <mesh position={[controlLeftPos.x, controlLeftPos.y, controlLeftPos.z]}>
+      {/* Debug: Show attachment points as small spheres - using positions from useFrame */}
+      {controlBarPositionsRef.current.center && (
+        <>
+          <mesh position={[controlBarPositionsRef.current.center.x, controlBarPositionsRef.current.center.y, controlBarPositionsRef.current.center.z]}>
+            <sphereGeometry args={[0.02, 8, 8]} />
+            <meshStandardMaterial color="yellow" emissive="yellow" emissiveIntensity={0.5} />
+          </mesh>
+          {controlBarPositionsRef.current.left && (
+            <mesh position={[controlBarPositionsRef.current.left.x, controlBarPositionsRef.current.left.y, controlBarPositionsRef.current.left.z]}>
               <sphereGeometry args={[0.02, 8, 8]} />
               <meshStandardMaterial color="cyan" emissive="cyan" emissiveIntensity={0.5} />
             </mesh>
-            <mesh position={[controlRightPos.x, controlRightPos.y, controlRightPos.z]}>
+          )}
+          {controlBarPositionsRef.current.right && (
+            <mesh position={[controlBarPositionsRef.current.right.x, controlBarPositionsRef.current.right.y, controlBarPositionsRef.current.right.z]}>
               <sphereGeometry args={[0.02, 8, 8]} />
               <meshStandardMaterial color="magenta" emissive="magenta" emissiveIntensity={0.5} />
             </mesh>
-            <mesh position={[controlFrontPos.x, controlFrontPos.y, controlFrontPos.z]}>
+          )}
+          {controlBarPositionsRef.current.front && (
+            <mesh position={[controlBarPositionsRef.current.front.x, controlBarPositionsRef.current.front.y, controlBarPositionsRef.current.front.z]}>
               <sphereGeometry args={[0.02, 8, 8]} />
               <meshStandardMaterial color="lime" emissive="lime" emissiveIntensity={0.5} />
             </mesh>
-            <mesh position={[controlBackPos.x, controlBackPos.y, controlBackPos.z]}>
+          )}
+          {controlBarPositionsRef.current.back && (
+            <mesh position={[controlBarPositionsRef.current.back.x, controlBarPositionsRef.current.back.y, controlBarPositionsRef.current.back.z]}>
               <sphereGeometry args={[0.02, 8, 8]} />
               <meshStandardMaterial color="orange" emissive="orange" emissiveIntensity={0.5} />
             </mesh>
-          </>
-        )
-      })()}
+          )}
+        </>
+      )}
       {/* Debug: Show puppet attachment points */}
       {puppetRef.current && (() => {
         const puppetWorldPos = new THREE.Vector3()
