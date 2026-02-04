@@ -69,13 +69,30 @@ export default function PuppetScene({ command }: PuppetSceneProps) {
           position={[0, 1.5, 0]}
           onStringControlsChange={setStringControls}
           stringCount={8}
+          controlSequence={currentSequence ? {
+            steps: currentSequence.steps.map(step => ({
+              startTime: step.startTime,
+              duration: step.duration,
+              // Convert puppet part rotations to crossbar movements
+              position: step.rotations.torso ? [
+                0,
+                1.5 - (step.rotations.torso.x || 0) * 0.3, // Lower crossbar to pull torso
+                0
+              ] : undefined,
+              rotation: step.rotations.head || step.rotations.torso ? [
+                (step.rotations.torso?.x || 0) * 0.5, // Tilt forward/back
+                0,
+                (step.rotations.head?.y || 0) * 0.3 // Tilt sideways
+              ] : undefined
+            })),
+            totalDuration: currentSequence.totalDuration
+          } : undefined}
+          sequenceStartTime={sequenceStartTime ?? undefined}
         />
       </group>
       
-      {/* Puppet */}
+      {/* Puppet - only responds to strings, not direct animation */}
       <Puppet 
-        sequence={currentSequence ?? undefined} 
-        sequenceStartTime={sequenceStartTime ?? undefined}
         stringControls={stringControls}
         controlBarRef={controlBarRef}
       />

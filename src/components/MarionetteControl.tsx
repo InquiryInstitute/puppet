@@ -13,12 +13,24 @@ interface MarionetteControlProps {
     rightFoot?: number
   }) => void
   stringCount?: number
+  controlSequence?: {
+    steps: Array<{
+      startTime: number
+      duration: number
+      position?: [number, number, number]
+      rotation?: [number, number, number]
+    }>
+    totalDuration: number
+  }
+  sequenceStartTime?: number | null
 }
 
 export default function MarionetteControl({ 
   position = [0, 1.5, 0],
   onStringControlsChange,
-  stringCount = 8
+  stringCount = 8,
+  controlSequence,
+  sequenceStartTime
 }: MarionetteControlProps) {
   const controlRef = useRef<THREE.Group>(null)
   const { camera, gl } = useThree()
@@ -93,8 +105,36 @@ export default function MarionetteControl({
   }
 
   // Update control bar transform
-  useFrame(() => {
+  useFrame((state) => {
     if (controlRef.current) {
+      // Apply control sequence if provided (from commands)
+      if (controlSequence && sequenceStartTime !== null && sequenceStartTime !== undefined) {
+        const elapsed = state.clock.elapsedTime - sequenceStartTime
+        const step = controlSequence.steps.find(
+          (s) => elapsed >= s.startTime && elapsed < s.startTime + s.duration
+        )
+        
+        if (step) {
+          // Interpolate position
+          if (step.position) {
+            const basePos = new THREE.Vector3(...position)
+            const targetPos = new THREE.Vector3(...step.position)
+            const progress = (elapsed - step.startTime) / step.duration
+            setControlPosition(basePos.clone().lerp(targetPos, progress))
+          }
+          
+          // Interpolate rotation
+          if (step.rotation) {
+            const targetRot = new THREE.Euler(...step.rotation)
+            const progress = (elapsed - step.startTime) / step.duration
+            setControlRotation(new THREE.Euler().setFromQuaternion(
+              new THREE.Quaternion().setFromEuler(controlRotation)
+                .slerp(new THREE.Quaternion().setFromEuler(targetRot), progress)
+            ))
+          }
+        }
+      }
+      
       controlRef.current.position.copy(controlPosition)
       controlRef.current.rotation.copy(controlRotation)
     }

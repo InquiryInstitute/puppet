@@ -78,17 +78,17 @@ export default function MarionetteStrings({
     const puppetLeftFootPos = puppetLeftFootLocal.clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
     const puppetRightFootPos = puppetRightFootLocal.clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
 
-    // Control bar attachment points (matching MuJoCo model sites)
-    // h_center for head and chest
-    const controlCenterLocal = new THREE.Vector3(0, 0, -0.1) // Slightly below control bar
-    // h_left for left hand
-    const controlLeftLocal = new THREE.Vector3(-0.15, 0, 0)
-    // h_right for right hand
-    const controlRightLocal = new THREE.Vector3(0.15, 0, 0)
-    // h_front for left shoulder and left foot
-    const controlFrontLocal = new THREE.Vector3(0, 0.05, 0)
-    // h_back for right shoulder and right foot
-    const controlBackLocal = new THREE.Vector3(0, -0.05, 0)
+    // Control bar attachment points (matching MuJoCo model sites exactly)
+    // h_center for head and chest - on the stem below crossbar
+    const controlCenterLocal = new THREE.Vector3(0, 0, -0.20)
+    // h_left for left hand - left end of crossbar
+    const controlLeftLocal = new THREE.Vector3(-0.18, 0, 0)
+    // h_right for right hand - right end of crossbar
+    const controlRightLocal = new THREE.Vector3(0.18, 0, 0)
+    // h_front for left shoulder and left foot - front of crossbar (+Y)
+    const controlFrontLocal = new THREE.Vector3(0, 0.06, 0)
+    // h_back for right shoulder and right foot - back of crossbar (-Y)
+    const controlBackLocal = new THREE.Vector3(0, -0.06, 0)
 
     // Transform to world space
     const controlCenterPos = controlCenterLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)

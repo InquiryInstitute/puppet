@@ -2,11 +2,8 @@ import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import MarionetteStrings from './MarionetteStrings'
-import { MotionSequence } from '../llm/types'
 
 interface PuppetProps {
-  sequence?: MotionSequence
-  sequenceStartTime?: number | null
   stringControls?: {
     head?: number
     leftHand?: number
@@ -18,7 +15,7 @@ interface PuppetProps {
   controlBarRef?: React.RefObject<THREE.Group>
 }
 
-export default function Puppet({ sequence, sequenceStartTime, stringControls, controlBarRef }: PuppetProps) {
+export default function Puppet({ stringControls, controlBarRef }: PuppetProps) {
   const groupRef = useRef<THREE.Group>(null)
   const headRef = useRef<THREE.Group>(null)
   const torsoRef = useRef<THREE.Group>(null)
@@ -27,61 +24,53 @@ export default function Puppet({ sequence, sequenceStartTime, stringControls, co
   const leftLegRef = useRef<THREE.Group>(null)
   const rightLegRef = useRef<THREE.Group>(null)
 
-  // Apply motion sequence to puppet parts
-  useFrame((state) => {
-    if (!sequence || sequenceStartTime === null || sequenceStartTime === undefined) {
-      return
+  // Puppet parts are only controlled by strings, not directly animated
+  // All movement comes from string tension controlled by the crossbar
+
+  // Apply string controls to puppet parts (strings pull parts, creating movement)
+  useFrame(() => {
+    if (!stringControls) return
+
+    // Head: pulled up by head string
+    if (headRef.current && stringControls.head !== undefined) {
+      const pull = stringControls.head
+      headRef.current.position.y = 0.4 + pull * 0.1 // Lift head up
+      headRef.current.rotation.x = -pull * 0.5 // Nod forward when pulled
     }
 
-    const elapsed = state.clock.elapsedTime - sequenceStartTime
-    
-    // Find the current step in the sequence
-    const step = sequence.steps.find(
-      (s) => elapsed >= s.startTime && elapsed < s.startTime + s.duration
-    )
-
-    if (step && state.clock.elapsedTime % 1 < 0.1) {
-      // Log every second for debugging
-      console.log('[Puppet] Applying step:', step, 'elapsed:', elapsed.toFixed(2))
+    // Torso: pulled up by chest string
+    if (torsoRef.current && stringControls.torso !== undefined) {
+      const pull = stringControls.torso
+      torsoRef.current.position.y = 0 + pull * 0.05 // Lift torso slightly
+      torsoRef.current.rotation.x = -pull * 0.3 // Lean back when pulled
     }
 
-    if (step) {
-      // Apply rotations to body parts based on step
-      if (headRef.current && step.rotations.head) {
-        if (step.rotations.head.x !== undefined) headRef.current.rotation.x = step.rotations.head.x
-        if (step.rotations.head.y !== undefined) headRef.current.rotation.y = step.rotations.head.y
-        if (step.rotations.head.z !== undefined) headRef.current.rotation.z = step.rotations.head.z
-      }
+    // Left Arm: pulled up by left hand string
+    if (leftArmRef.current && stringControls.leftHand !== undefined) {
+      const pull = stringControls.leftHand
+      leftArmRef.current.rotation.x = -pull * 1.2 // Raise arm
+      leftArmRef.current.rotation.z = pull * 0.5 // Rotate arm outward
+    }
 
-      if (torsoRef.current && step.rotations.torso) {
-        if (step.rotations.torso.x !== undefined) torsoRef.current.rotation.x = step.rotations.torso.x
-        if (step.rotations.torso.y !== undefined) torsoRef.current.rotation.y = step.rotations.torso.y
-        if (step.rotations.torso.z !== undefined) torsoRef.current.rotation.z = step.rotations.torso.z
-      }
+    // Right Arm: pulled up by right hand string
+    if (rightArmRef.current && stringControls.rightHand !== undefined) {
+      const pull = stringControls.rightHand
+      rightArmRef.current.rotation.x = -pull * 1.2 // Raise arm
+      rightArmRef.current.rotation.z = -pull * 0.5 // Rotate arm outward
+    }
 
-      if (leftArmRef.current && step.rotations.leftArm) {
-        if (step.rotations.leftArm.x !== undefined) leftArmRef.current.rotation.x = step.rotations.leftArm.x
-        if (step.rotations.leftArm.y !== undefined) leftArmRef.current.rotation.y = step.rotations.leftArm.y
-        if (step.rotations.leftArm.z !== undefined) leftArmRef.current.rotation.z = step.rotations.leftArm.z
-      }
+    // Left Leg: pulled up by left foot string
+    if (leftLegRef.current && stringControls.leftFoot !== undefined) {
+      const pull = stringControls.leftFoot
+      leftLegRef.current.rotation.x = pull * 0.8 // Lift leg
+      leftLegRef.current.rotation.z = pull * 0.2 // Rotate leg slightly
+    }
 
-      if (rightArmRef.current && step.rotations.rightArm) {
-        if (step.rotations.rightArm.x !== undefined) rightArmRef.current.rotation.x = step.rotations.rightArm.x
-        if (step.rotations.rightArm.y !== undefined) rightArmRef.current.rotation.y = step.rotations.rightArm.y
-        if (step.rotations.rightArm.z !== undefined) rightArmRef.current.rotation.z = step.rotations.rightArm.z
-      }
-
-      if (leftLegRef.current && step.rotations.leftLeg) {
-        if (step.rotations.leftLeg.x !== undefined) leftLegRef.current.rotation.x = step.rotations.leftLeg.x
-        if (step.rotations.leftLeg.y !== undefined) leftLegRef.current.rotation.y = step.rotations.leftLeg.y
-        if (step.rotations.leftLeg.z !== undefined) leftLegRef.current.rotation.z = step.rotations.leftLeg.z
-      }
-
-      if (rightLegRef.current && step.rotations.rightLeg) {
-        if (step.rotations.rightLeg.x !== undefined) rightLegRef.current.rotation.x = step.rotations.rightLeg.x
-        if (step.rotations.rightLeg.y !== undefined) rightLegRef.current.rotation.y = step.rotations.rightLeg.y
-        if (step.rotations.rightLeg.z !== undefined) rightLegRef.current.rotation.z = step.rotations.rightLeg.z
-      }
+    // Right Leg: pulled up by right foot string
+    if (rightLegRef.current && stringControls.rightFoot !== undefined) {
+      const pull = stringControls.rightFoot
+      rightLegRef.current.rotation.x = pull * 0.8 // Lift leg
+      rightLegRef.current.rotation.z = -pull * 0.2 // Rotate leg slightly
     }
   })
 
@@ -95,72 +84,72 @@ export default function Puppet({ sequence, sequenceStartTime, stringControls, co
         puppetPosition={[0, 1, 0]}
       />
 
-      {/* Head */}
-      <group ref={headRef} position={[0, 0.4, 0]}>
-        <mesh castShadow>
-          <sphereGeometry args={[0.15, 16, 16]} />
-          <meshStandardMaterial color="#fdbcb4" />
-        </mesh>
-      </group>
-
-      {/* Torso */}
+      {/* Torso (root of puppet hierarchy) */}
       <group ref={torsoRef} position={[0, 0, 0]}>
         <mesh castShadow>
           <boxGeometry args={[0.3, 0.4, 0.2]} />
           <meshStandardMaterial color="#4a5568" />
         </mesh>
-      </group>
 
-      {/* Left Arm */}
-      <group ref={leftArmRef} position={[-0.25, 0.1, 0]}>
-        <mesh castShadow>
-          <cylinderGeometry args={[0.03, 0.03, 0.3, 8]} />
-          <meshStandardMaterial color="#fdbcb4" />
-        </mesh>
-        {/* Hand */}
-        <mesh position={[0, -0.18, 0]} castShadow>
-          <sphereGeometry args={[0.05, 8, 8]} />
-          <meshStandardMaterial color="#fdbcb4" />
-        </mesh>
-      </group>
+        {/* Head (child of torso) */}
+        <group ref={headRef} position={[0, 0.4, 0]}>
+          <mesh castShadow>
+            <sphereGeometry args={[0.15, 16, 16]} />
+            <meshStandardMaterial color="#fdbcb4" />
+          </mesh>
+        </group>
 
-      {/* Right Arm */}
-      <group ref={rightArmRef} position={[0.25, 0.1, 0]}>
-        <mesh castShadow>
-          <cylinderGeometry args={[0.03, 0.03, 0.3, 8]} />
-          <meshStandardMaterial color="#fdbcb4" />
-        </mesh>
-        {/* Hand */}
-        <mesh position={[0, -0.18, 0]} castShadow>
-          <sphereGeometry args={[0.05, 8, 8]} />
-          <meshStandardMaterial color="#fdbcb4" />
-        </mesh>
-      </group>
+        {/* Left Arm (child of torso) */}
+        <group ref={leftArmRef} position={[-0.25, 0.1, 0]}>
+          <mesh castShadow>
+            <cylinderGeometry args={[0.03, 0.03, 0.3, 8]} />
+            <meshStandardMaterial color="#fdbcb4" />
+          </mesh>
+          {/* Hand */}
+          <mesh position={[0, -0.18, 0]} castShadow>
+            <sphereGeometry args={[0.05, 8, 8]} />
+            <meshStandardMaterial color="#fdbcb4" />
+          </mesh>
+        </group>
 
-      {/* Left Leg */}
-      <group ref={leftLegRef} position={[-0.1, -0.3, 0]}>
-        <mesh castShadow>
-          <cylinderGeometry args={[0.04, 0.04, 0.35, 8]} />
-          <meshStandardMaterial color="#2d3748" />
-        </mesh>
-        {/* Foot */}
-        <mesh position={[0, -0.2, 0.05]} castShadow>
-          <boxGeometry args={[0.08, 0.05, 0.15]} />
-          <meshStandardMaterial color="#1a202c" />
-        </mesh>
-      </group>
+        {/* Right Arm (child of torso) */}
+        <group ref={rightArmRef} position={[0.25, 0.1, 0]}>
+          <mesh castShadow>
+            <cylinderGeometry args={[0.03, 0.03, 0.3, 8]} />
+            <meshStandardMaterial color="#fdbcb4" />
+          </mesh>
+          {/* Hand */}
+          <mesh position={[0, -0.18, 0]} castShadow>
+            <sphereGeometry args={[0.05, 8, 8]} />
+            <meshStandardMaterial color="#fdbcb4" />
+          </mesh>
+        </group>
 
-      {/* Right Leg */}
-      <group ref={rightLegRef} position={[0.1, -0.3, 0]}>
-        <mesh castShadow>
-          <cylinderGeometry args={[0.04, 0.04, 0.35, 8]} />
-          <meshStandardMaterial color="#2d3748" />
-        </mesh>
-        {/* Foot */}
-        <mesh position={[0, -0.2, 0.05]} castShadow>
-          <boxGeometry args={[0.08, 0.05, 0.15]} />
-          <meshStandardMaterial color="#1a202c" />
-        </mesh>
+        {/* Left Leg (child of torso) */}
+        <group ref={leftLegRef} position={[-0.1, -0.3, 0]}>
+          <mesh castShadow>
+            <cylinderGeometry args={[0.04, 0.04, 0.35, 8]} />
+            <meshStandardMaterial color="#2d3748" />
+          </mesh>
+          {/* Foot */}
+          <mesh position={[0, -0.2, 0.05]} castShadow>
+            <boxGeometry args={[0.08, 0.05, 0.15]} />
+            <meshStandardMaterial color="#1a202c" />
+          </mesh>
+        </group>
+
+        {/* Right Leg (child of torso) */}
+        <group ref={rightLegRef} position={[0.1, -0.3, 0]}>
+          <mesh castShadow>
+            <cylinderGeometry args={[0.04, 0.04, 0.35, 8]} />
+            <meshStandardMaterial color="#2d3748" />
+          </mesh>
+          {/* Foot */}
+          <mesh position={[0, -0.2, 0.05]} castShadow>
+            <boxGeometry args={[0.08, 0.05, 0.15]} />
+            <meshStandardMaterial color="#1a202c" />
+          </mesh>
+        </group>
       </group>
     </group>
   )
