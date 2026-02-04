@@ -7,6 +7,7 @@ import CoordinateAxes from './CoordinateAxes'
 import { useMuJoCo } from '../mujoco/useMuJoCo'
 import { useLLMController } from '../llm/useLLMController'
 import { createWoodTexture } from '../utils/woodTexture'
+import { createCurtainTexture } from '../utils/curtainTexture'
 
 interface PuppetSceneProps {
   command: string
@@ -36,6 +37,8 @@ export default function PuppetScene({ command, onControlBarStateChange }: Puppet
   
   // Create wood texture for stage
   const woodTexture = useMemo(() => createWoodTexture(), [])
+  // Create red curtain texture for backdrop
+  const curtainTexture = useMemo(() => createCurtainTexture(1024, 512), [])
 
   // Handle direct string pulling
   const handleStringPull = (stringName: string, pullAmount: number) => {
@@ -120,12 +123,12 @@ export default function PuppetScene({ command, onControlBarStateChange }: Puppet
         />
       </mesh>
       
-      {/* Stage backdrop */}
+      {/* Stage backdrop - red curtain */}
       <mesh position={[0, 2.5, -5]} receiveShadow>
         <planeGeometry args={[10, 5]} />
         <meshStandardMaterial 
-          color="#1a1a1a"
-          roughness={0.7}
+          map={curtainTexture}
+          roughness={0.9}
           metalness={0.0}
         />
       </mesh>
