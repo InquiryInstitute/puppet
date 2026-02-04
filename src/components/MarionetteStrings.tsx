@@ -171,15 +171,38 @@ export default function MarionetteStrings({
     return stringConfigs
       .filter(config => config.visible !== false)
       .map((config) => {
-        const points = [config.start, config.end]
+        // Create flexible curved string using quadratic bezier curve
+        // Control point creates the sag/curve in the string
+        const midPoint = new THREE.Vector3()
+          .addVectors(config.start, config.end)
+          .multiplyScalar(0.5)
+        
+        // Add sag based on string length (longer strings sag more)
+        const stringLength = config.start.distanceTo(config.end)
+        const sagAmount = Math.max(0.02, stringLength * 0.08) // 8% sag, minimum 2cm
+        
+        // Sag downward (negative Y) to simulate gravity
+        const controlPoint = midPoint.clone()
+        controlPoint.y -= sagAmount
+        
+        // Create curve with multiple points for smooth flexible appearance
+        const curve = new THREE.QuadraticBezierCurve3(
+          config.start,
+          controlPoint,
+          config.end
+        )
+        
+        // Generate points along the curve
+        const curvePoints = curve.getPoints(30)
+        
         return (
           <Line
             key={config.name}
-            points={points}
+            points={curvePoints}
             color={config.color}
-            lineWidth={2}
+            lineWidth={1.5}
             transparent
-            opacity={0.8}
+            opacity={0.7}
           />
         )
       })

@@ -177,45 +177,7 @@ export default function MarionetteControl({
 
   return (
     <group ref={controlRef}>
-      {/* Main horizontal crossbar - rotated to be horizontal */}
-      <mesh 
-        rotation={[0, 0, Math.PI / 2]}
-        castShadow
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
-      >
-        <cylinderGeometry args={[0.015, 0.015, 0.36, 16]} />
-        <meshStandardMaterial 
-          color={isDragging ? "#a0522d" : "#8b4513"}
-          emissive={isDragging ? "#8b4513" : "#654321"}
-          emissiveIntensity={isDragging ? 0.3 : 0.1}
-          roughness={0.6}
-          metalness={0.2}
-        />
-      </mesh>
-
-      {/* Vertical stem/grip */}
-      <mesh 
-        position={[0, 0, -0.20]} 
-        castShadow
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
-      >
-        <cylinderGeometry args={[0.012, 0.012, 0.20, 16]} />
-        <meshStandardMaterial 
-          color={isDragging ? "#654321" : "#654321"}
-          emissive={isDragging ? "#654321" : "#4a2c1a"}
-          emissiveIntensity={isDragging ? 0.3 : 0.1}
-          roughness={0.6}
-          metalness={0.2}
-        />
-      </mesh>
-      
-      {/* Invisible larger hitbox for easier interaction */}
+      {/* Invisible control bar - functionality only, no visual */}
       <mesh
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
@@ -224,49 +186,6 @@ export default function MarionetteControl({
         visible={false}
       >
         <boxGeometry args={[0.5, 0.5, 0.5]} />
-      </mesh>
-      
-      {/* Visual highlight ring around crossbar for visibility */}
-      <mesh rotation={[0, 0, Math.PI / 2]}>
-        <torusGeometry args={[0.18, 0.002, 8, 32]} />
-        <meshStandardMaterial 
-          color="#ffd700"
-          emissive="#ffd700"
-          emissiveIntensity={0.5}
-          transparent
-          opacity={0.6}
-        />
-      </mesh>
-
-      {/* String attachment points (visual indicators) - larger and more visible */}
-      {/* Center (head/chest) - h_center */}
-      <mesh position={[0, 0, -0.20]}>
-        <sphereGeometry args={[0.015, 12, 12]} />
-        <meshStandardMaterial color="#ff6b6b" emissive="#ff6b6b" emissiveIntensity={0.5} />
-      </mesh>
-      
-      {/* Left (left hand) - h_left */}
-      <mesh position={[-0.18, 0, 0]}>
-        <sphereGeometry args={[0.015, 12, 12]} />
-        <meshStandardMaterial color="#4ecdc4" emissive="#4ecdc4" emissiveIntensity={0.5} />
-      </mesh>
-      
-      {/* Right (right hand) - h_right */}
-      <mesh position={[0.18, 0, 0]}>
-        <sphereGeometry args={[0.015, 12, 12]} />
-        <meshStandardMaterial color="#45b7d1" emissive="#45b7d1" emissiveIntensity={0.5} />
-      </mesh>
-      
-      {/* Front (left shoulder, left foot) - h_front */}
-      <mesh position={[0, 0.06, 0]}>
-        <sphereGeometry args={[0.015, 12, 12]} />
-        <meshStandardMaterial color="#96ceb4" emissive="#96ceb4" emissiveIntensity={0.5} />
-      </mesh>
-      
-      {/* Back (right shoulder, right foot) - h_back */}
-      <mesh position={[0, -0.06, 0]}>
-        <sphereGeometry args={[0.015, 12, 12]} />
-        <meshStandardMaterial color="#a8d5ba" emissive="#a8d5ba" emissiveIntensity={0.5} />
       </mesh>
     </group>
   )
