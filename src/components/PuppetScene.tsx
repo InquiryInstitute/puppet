@@ -11,9 +11,10 @@ import { createWoodTexture } from '../utils/woodTexture'
 interface PuppetSceneProps {
   command: string
   isExecuting: boolean
+  onControlBarStateChange?: (position: { x: number; y: number; z: number }, rotation: { roll: number; pitch: number; yaw: number }) => void
 }
 
-export default function PuppetScene({ command }: PuppetSceneProps) {
+export default function PuppetScene({ command, onControlBarStateChange }: PuppetSceneProps) {
   const { model, scene, step } = useMuJoCo()
   const { executeCommand, currentSequence, isProcessing } = useLLMController()
   const puppetRef = useRef<THREE.Group>(null)
@@ -134,6 +135,7 @@ export default function PuppetScene({ command }: PuppetSceneProps) {
         <MarionetteControl
           position={[0, 2.5, 0]}
           onStringControlsChange={setStringControls}
+          onPositionRotationChange={onControlBarStateChange}
           stringCount={8}
           controlBarRef={controlBarRef}
           controlSequence={currentSequence ? {

@@ -12,6 +12,7 @@ interface MarionetteControlProps {
     leftFoot?: number
     rightFoot?: number
   }) => void
+  onPositionRotationChange?: (position: { x: number; y: number; z: number }, rotation: { roll: number; pitch: number; yaw: number }) => void
   stringCount?: number
   controlSequence?: {
     steps: Array<{
@@ -29,6 +30,7 @@ interface MarionetteControlProps {
 export default function MarionetteControl({ 
   position = [0, 1.5, 0],
   onStringControlsChange,
+  onPositionRotationChange,
   stringCount = 8,
   controlSequence,
   sequenceStartTime,
@@ -176,6 +178,16 @@ export default function MarionetteControl({
       // Update the control ref position/rotation so strings can track it
       controlRef.current.position.copy(controlPosition)
       controlRef.current.rotation.copy(controlRotation)
+      
+      // Report position and rotation to parent
+      if (onPositionRotationChange) {
+        // Convert Euler angles to roll/pitch/yaw
+        // In Three.js: Euler.x = pitch, Euler.y = yaw, Euler.z = roll
+        onPositionRotationChange(
+          { x: controlPosition.x, y: controlPosition.y, z: controlPosition.z },
+          { roll: controlRotation.z, pitch: controlRotation.x, yaw: controlRotation.y }
+        )
+      }
     }
   })
 

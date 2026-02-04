@@ -1,11 +1,22 @@
+import { useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei'
 import PuppetScene from './components/PuppetScene'
+import ControlBarDisplay from './components/ControlBarDisplay'
 import './App.css'
 
 function App() {
+  const [controlBarState, setControlBarState] = useState({
+    position: { x: 0, y: 2.5, z: 0 },
+    rotation: { roll: 0, pitch: 0, yaw: 0 }
+  })
+
   return (
     <div className="app">
+      <ControlBarDisplay 
+        position={controlBarState.position}
+        rotation={controlBarState.rotation}
+      />
       <div className="canvas-container">
         <Canvas shadows>
           <PerspectiveCamera makeDefault position={[0, 2, 5]} />
@@ -17,7 +28,11 @@ function App() {
             shadow-mapSize-width={2048}
             shadow-mapSize-height={2048}
           />
-          <PuppetScene command="" isExecuting={false} />
+          <PuppetScene 
+            command="" 
+            isExecuting={false}
+            onControlBarStateChange={(pos, rot) => setControlBarState({ position: pos, rotation: rot })}
+          />
           <OrbitControls
             enablePan={true}
             enableZoom={true}
