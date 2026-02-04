@@ -56,6 +56,13 @@ export default function PuppetScene({ command, onControlBarStateChange, onString
     leftHand: 0,
     rightHand: 0,
   })
+  const [controlBarState, setControlBarState] = useState<{
+    position: { x: number; y: number; z: number }
+    rotation: { roll: number; pitch: number; yaw: number }
+  }>({
+    position: { x: 0, y: 2.5, z: 0 },
+    rotation: { roll: 0, pitch: 0, yaw: 0 },
+  })
   const lastCommandRef = useRef<string>('')
   
   // Create wood texture for stage
@@ -161,7 +168,10 @@ export default function PuppetScene({ command, onControlBarStateChange, onString
         <MarionetteControl
           position={[0, 2.5, 0]}
           onStringControlsChange={setStringControls}
-          onPositionRotationChange={onControlBarStateChange}
+          onPositionRotationChange={(pos, rot) => {
+            setControlBarState({ position: pos, rotation: rot })
+            onControlBarStateChange?.(pos, rot)
+          }}
           stringCount={8}
           controlBarRef={controlBarRef}
           controlSequence={currentSequence ? {
@@ -185,10 +195,12 @@ export default function PuppetScene({ command, onControlBarStateChange, onString
           sequenceStartTime={sequenceStartTime ?? undefined}
         />
         
-        {/* Puppet - only responds to strings, not direct animation */}
+        {/* Puppet - force-based physics driven by string tensions */}
         <Puppet 
           stringControls={stringControls}
           controlBarRef={controlBarRef}
+          controlBarPosition={controlBarState.position}
+          controlBarRotation={controlBarState.rotation}
           onStringPull={handleStringPull}
           onPositionsChange={onStringPositionsChange}
         />

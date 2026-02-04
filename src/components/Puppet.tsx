@@ -2,6 +2,8 @@ import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import MarionetteStrings from './MarionetteStrings'
+import { calculateAllStringPhysics } from '../physics/stringPhysics'
+import { initializePuppetPhysics, createDefaultJointConfigs, applyStringForcesToJoints, applyGravity, stepPuppetPhysics, PuppetPhysicsState } from '../physics/puppetPhysics'
 
 interface StringPosition {
   x: number
@@ -30,6 +32,8 @@ interface PuppetProps {
     rightFoot?: number
   }
   controlBarRef?: React.RefObject<THREE.Group>
+  controlBarPosition?: { x: number; y: number; z: number }
+  controlBarRotation?: { roll: number; pitch: number; yaw: number }
   onStringPull?: (stringName: string, pullAmount: number) => void
   onPositionsChange?: (positions: {
     controller: StringPositions
@@ -39,7 +43,14 @@ interface PuppetProps {
   }) => void
 }
 
-export default function Puppet({ stringControls, controlBarRef, onStringPull, onPositionsChange }: PuppetProps) {
+export default function Puppet({ 
+  stringControls, 
+  controlBarRef, 
+  controlBarPosition = { x: 0, y: 2.5, z: 0 },
+  controlBarRotation = { roll: 0, pitch: 0, yaw: 0 },
+  onStringPull, 
+  onPositionsChange 
+}: PuppetProps) {
   const groupRef = useRef<THREE.Group>(null)
   const headRef = useRef<THREE.Group>(null)
   const torsoRef = useRef<THREE.Group>(null)
@@ -51,6 +62,11 @@ export default function Puppet({ stringControls, controlBarRef, onStringPull, on
   const leftShinRef = useRef<THREE.Group>(null)
   const rightThighRef = useRef<THREE.Group>(null)
   const rightShinRef = useRef<THREE.Group>(null)
+
+  // Force-based physics state (use ref for mutable state updated every frame)
+  const physicsStateRef = useRef<PuppetPhysicsState>(initializePuppetPhysics())
+  const physicsConfig = createDefaultJointConfigs()
+  const useForceBasedPhysics = controlBarPosition && controlBarRotation // Enable force-based physics when control bar state is provided
 
   // Gravity simulation with mass
   const velocityRef = useRef(new THREE.Vector3(0, 0, 0))
@@ -67,12 +83,132 @@ export default function Puppet({ stringControls, controlBarRef, onStringPull, on
   const MAX_HEIGHT = 2.0 // Maximum height puppet can reach (based on string length)
   const MAX_HORIZONTAL_DISTANCE = 1.0 // Maximum horizontal distance from center
 
-  // Puppet parts are only controlled by strings, not directly animated
-  // All movement comes from string tension controlled by the crossbar
+  // Puppet parts are controlled by force-based physics from string tensions
 
-  // Apply gravity and string controls to puppet parts
+  // Force-based physics: calculate string tensions and apply forces to joints
   useFrame((_, delta) => {
     if (!groupRef.current) return
+
+    // Use force-based physics if control bar state is provided
+    if (useForceBasedPhysics && controlBarPosition && controlBarRotation) {
+      // Get puppet base position and rotation
+      const group = groupRef.current
+      if (!group) return
+      
+      const puppetBasePos = new THREE.Vector3(
+        group.position.x,
+        group.position.y,
+        group.position.z
+      )
+      const puppetBaseRot = new THREE.Euler(0, 0, 0) // Puppet base doesn't rotate
+
+      // Get puppet attachment points in world space
+      const getWorldPositionFromRef = (ref: React.RefObject<THREE.Group> | undefined, offset: THREE.Vector3): THREE.Vector3 => {
+        if (ref?.current) {
+          const worldPos = new THREE.Vector3()
+          ref.current.getWorldPosition(worldPos)
+          const localOffset = offset.clone().applyQuaternion(ref.current.getWorldQuaternion(new THREE.Quaternion()))
+          return worldPos.add(localOffset)
+        }
+        // Fallback: calculate from puppet group
+        const puppetWorldQuat = new THREE.Quaternion()
+        group.getWorldQuaternion(puppetWorldQuat)
+        return offset.clone().applyQuaternion(puppetWorldQuat).add(puppetBasePos)
+      }
+
+      const puppetAttachmentPoints = {
+        head: headRef.current 
+          ? getWorldPositionFromRef(headRef, new THREE.Vector3(0, 0.15, 0))
+          : new THREE.Vector3(0, 0.55, 0).add(puppetBasePos),
+        chest: new THREE.Vector3(0, 0.2, 0).add(puppetBasePos),
+        leftHand: leftForearmRef.current
+          ? getWorldPositionFromRef(leftForearmRef, new THREE.Vector3(-0.18, 0, 0))
+          : new THREE.Vector3(-0.51, 0.1, 0).add(puppetBasePos),
+        rightHand: rightForearmRef.current
+          ? getWorldPositionFromRef(rightForearmRef, new THREE.Vector3(0.18, 0, 0))
+          : new THREE.Vector3(0.51, 0.1, 0).add(puppetBasePos),
+        leftShoulder: new THREE.Vector3(-0.15, 0.1, 0).add(puppetBasePos),
+        rightShoulder: new THREE.Vector3(0.15, 0.1, 0).add(puppetBasePos),
+        leftFoot: leftShinRef.current
+          ? getWorldPositionFromRef(leftShinRef, new THREE.Vector3(0, -0.2, 0.05))
+          : new THREE.Vector3(-0.1, -0.8, 0.05).add(puppetBasePos),
+        rightFoot: rightShinRef.current
+          ? getWorldPositionFromRef(rightShinRef, new THREE.Vector3(0, -0.2, 0.05))
+          : new THREE.Vector3(0.1, -0.8, 0.05).add(puppetBasePos),
+      }
+
+      // Convert control bar rotation from roll/pitch/yaw to Euler
+      const controlBarEuler = new THREE.Euler(
+        controlBarRotation.pitch,
+        controlBarRotation.yaw,
+        controlBarRotation.roll,
+        'YXZ'
+      )
+      const controlBarPos = new THREE.Vector3(
+        controlBarPosition.x,
+        controlBarPosition.y,
+        controlBarPosition.z
+      )
+
+      // Calculate string tensions
+      const stringStates = calculateAllStringPhysics(
+        controlBarPos,
+        controlBarEuler,
+        puppetAttachmentPoints
+      )
+
+      // Apply string forces to joints
+      applyStringForcesToJoints(
+        stringStates,
+        physicsStateRef.current,
+        physicsConfig,
+        puppetBasePos,
+        puppetBaseRot
+      )
+
+      // Apply gravity
+      applyGravity(physicsStateRef.current)
+
+      // Step physics simulation
+      stepPuppetPhysics(physicsStateRef.current, physicsConfig, delta)
+
+      // Update visual puppet from physics state
+      if (headRef.current) {
+        headRef.current.rotation.copy(physicsStateRef.current.head.rotation)
+      }
+      if (torsoRef.current) {
+        torsoRef.current.rotation.copy(physicsStateRef.current.torso.rotation)
+      }
+      if (leftUpperArmRef.current) {
+        leftUpperArmRef.current.rotation.copy(physicsStateRef.current.leftShoulder.rotation)
+      }
+      if (rightUpperArmRef.current) {
+        rightUpperArmRef.current.rotation.copy(physicsStateRef.current.rightShoulder.rotation)
+      }
+      if (leftForearmRef.current) {
+        leftForearmRef.current.rotation.copy(physicsStateRef.current.leftElbow.rotation)
+      }
+      if (rightForearmRef.current) {
+        rightForearmRef.current.rotation.copy(physicsStateRef.current.rightElbow.rotation)
+      }
+      if (leftThighRef.current) {
+        leftThighRef.current.rotation.copy(physicsStateRef.current.leftHip.rotation)
+      }
+      if (rightThighRef.current) {
+        rightThighRef.current.rotation.copy(physicsStateRef.current.rightHip.rotation)
+      }
+      if (leftShinRef.current) {
+        leftShinRef.current.rotation.copy(physicsStateRef.current.leftKnee.rotation)
+      }
+      if (rightShinRef.current) {
+        rightShinRef.current.rotation.copy(physicsStateRef.current.rightKnee.rotation)
+      }
+
+      return // Skip kinematic control when using force-based physics
+    }
+
+    // Fallback to kinematic control if force-based physics is not enabled
+    // Apply gravity and string controls to puppet parts
 
     // Calculate total string pull (average of all active strings)
     const totalPull = stringControls ? (
