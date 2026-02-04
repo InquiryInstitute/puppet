@@ -119,26 +119,37 @@ export default function MarionetteControl({
     setControlRotation(prev => {
       const newRot = prev.clone()
       
-      // Shift + Left/Right: tilt left/right (rotate around Z)
+      // Shift + arrows: rotate control bar around its own center
       if (pressedKeys.has('Shift')) {
+        // Shift + Left/Right: rotate around Y axis (spin the control bar)
         if (pressedKeys.has('ArrowLeft')) {
-          newRot.z += ROTATE_SPEED * delta
+          newRot.y += ROTATE_SPEED * delta
         }
         if (pressedKeys.has('ArrowRight')) {
-          newRot.z -= ROTATE_SPEED * delta
+          newRot.y -= ROTATE_SPEED * delta
         }
-        // Shift + Up/Down: tilt up/down (rotate around X)
+        // Shift + Up/Down: rotate around X axis (tilt forward/back)
         if (pressedKeys.has('ArrowUp') && !pressedKeys.has('Control')) {
           newRot.x += ROTATE_SPEED * delta
         }
         if (pressedKeys.has('ArrowDown') && !pressedKeys.has('Control')) {
           newRot.x -= ROTATE_SPEED * delta
         }
+        // Shift + Ctrl + Left/Right: rotate around Z axis (tilt left/right)
+        if (pressedKeys.has('Control')) {
+          if (pressedKeys.has('ArrowLeft')) {
+            newRot.z += ROTATE_SPEED * delta
+          }
+          if (pressedKeys.has('ArrowRight')) {
+            newRot.z -= ROTATE_SPEED * delta
+          }
+        }
       }
       
-      // Clamp rotations
-      newRot.x = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, newRot.x))
-      newRot.z = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, newRot.z))
+      // Don't clamp Y rotation (allow full 360° spin)
+      // Clamp X and Z rotations to prevent extreme tilting
+      newRot.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, newRot.x))
+      newRot.z = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, newRot.z))
       
       return newRot
     })
