@@ -5,6 +5,23 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Puppet - LLM-Driven Marionettes</title>
+    <script>
+      // Handle GitHub Pages redirect immediately, before React loads
+      // This fixes URLs like /?/sim back to /sim
+      (function() {
+        const queryParams = new URLSearchParams(window.location.search);
+        const redirectPath = queryParams.get('/');
+        if (redirectPath) {
+          // Convert the redirect path back to a normal path
+          let path = redirectPath.replace(/~and~/g, '&').replace(/~slash~/g, '/');
+          if (!path.startsWith('/')) {
+            path = '/' + path;
+          }
+          // Replace URL immediately, before React Router loads
+          window.history.replaceState({}, '', path + window.location.hash);
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
