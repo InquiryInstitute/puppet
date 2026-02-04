@@ -41,7 +41,30 @@ export default function Splash() {
             <li>8-string marionette system (head, chest, hands, shoulders, feet)</li>
             <li>Interactive string pulling and manipulation</li>
             <li>Gravity, collision detection, and joint dynamics</li>
+            <li><strong>New:</strong> iPhone controller with IMU and ARKit body tracking</li>
           </ul>
+          
+          <div className="splash-phone-section">
+            <h3>📱 Phone Controller Interface</h3>
+            <p>
+              Control the marionette using your iPhone as a physical controller! The iOS app offers 
+              two modes: <strong>Controller mode</strong> uses the device's IMU sensors to detect 
+              orientation and movement, while <strong>Mocap mode</strong> uses ARKit body tracking 
+              to capture your skeleton for inverse kinematics mapping to the puppet.
+            </p>
+            <p>
+              Connect your phone via Web Bluetooth (BLE) to stream real-time telemetry data. 
+              View the live data stream and see how your movements translate to puppet control.
+            </p>
+            <a 
+              href="/telemetry.html" 
+              className="splash-button phone-link"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              View Telemetry Dashboard
+            </a>
+          </div>
         </div>
         
         <div className="splash-buttons">

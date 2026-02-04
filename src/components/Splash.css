@@ -113,6 +113,34 @@
   transform: translateY(0);
 }
 
+.splash-phone-section {
+  margin-top: 2.5rem;
+  padding: 1.5rem;
+  background: rgba(253, 188, 180, 0.1);
+  border: 2px solid rgba(253, 188, 180, 0.3);
+  border-radius: 12px;
+  text-align: left;
+}
+
+.splash-phone-section h3 {
+  font-size: 1.5rem;
+  color: #fdbcb4;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.splash-phone-section p {
+  margin-bottom: 1rem;
+  line-height: 1.8;
+}
+
+.splash-phone-section .phone-link {
+  display: inline-block;
+  margin-top: 1rem;
+  text-align: center;
+  width: 100%;
+}
+
 @media (max-width: 768px) {
   .splash-title {
     font-size: 1.8rem;
@@ -125,5 +153,13 @@
   .splash-button {
     padding: 0.8rem 2rem;
     font-size: 1rem;
+  }
+  
+  .splash-phone-section {
+    padding: 1rem;
+  }
+  
+  .splash-phone-section h3 {
+    font-size: 1.2rem;
   }
 }
