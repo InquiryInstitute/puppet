@@ -197,7 +197,7 @@ export default function MarionetteControl({
 
   return (
     <group ref={controlRef}>
-      {/* Crossbar (horizontal bar) */}
+      {/* Crossbar (horizontal bar) - smaller */}
       <mesh
         position={[0, 0, 0]}
         onPointerDown={handlePointerDown}
@@ -206,7 +206,7 @@ export default function MarionetteControl({
         onPointerLeave={handlePointerUp}
         castShadow
       >
-        <cylinderGeometry args={[0.01, 0.01, 0.36, 8]} />
+        <cylinderGeometry args={[0.008, 0.008, 0.24, 8]} />
         <meshStandardMaterial 
           color="#8b7355" 
           metalness={0.3}
@@ -214,7 +214,7 @@ export default function MarionetteControl({
         />
       </mesh>
       
-      {/* Stem (vertical handle) */}
+      {/* Stem (vertical handle) - smaller to match crossbar */}
       <mesh
         position={[0, 0, -0.10]}
         onPointerDown={handlePointerDown}
@@ -224,7 +224,7 @@ export default function MarionetteControl({
         rotation={[Math.PI / 2, 0, 0]}
         castShadow
       >
-        <cylinderGeometry args={[0.008, 0.008, 0.20, 8]} />
+        <cylinderGeometry args={[0.006, 0.006, 0.20, 8]} />
         <meshStandardMaterial 
           color="#6b5d4a" 
           metalness={0.3}
@@ -245,8 +245,8 @@ export default function MarionetteControl({
       </mesh>
       
       {/* Left end (left hand) */}
-      <mesh position={[-0.18, 0, 0]} castShadow>
-        <sphereGeometry args={[0.015, 8, 8]} />
+      <mesh position={[-0.12, 0, 0]} castShadow>
+        <sphereGeometry args={[0.012, 8, 8]} />
         <meshStandardMaterial 
           color="#d4af37" 
           emissive="#d4af37"
@@ -256,7 +256,7 @@ export default function MarionetteControl({
       </mesh>
       
       {/* Right end (right hand) */}
-      <mesh position={[0.18, 0, 0]} castShadow>
+      <mesh position={[0.12, 0, 0]} castShadow>
         <sphereGeometry args={[0.015, 8, 8]} />
         <meshStandardMaterial 
           color="#d4af37" 

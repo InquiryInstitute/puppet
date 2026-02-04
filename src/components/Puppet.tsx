@@ -139,43 +139,43 @@ export default function Puppet({ stringControls, controlBarRef, onStringPull }: 
       torsoRef.current.rotation.x = 0.2 // Torso sags forward
     }
 
-    // Left Arm: pulled up by left hand string, or sagged by gravity
+    // Left Arm: pulled up by left hand string, or hangs naturally at rest
     // With the arm rotated 90° around Z, X rotation raises/lowers, Y rotation swings forward/back
     if (leftUpperArmRef.current && stringControls.leftHand !== undefined) {
       const pull = stringControls.leftHand
-      // When pulled: raise arm (rotate around Y axis to lift), when relaxed: let gravity pull it down
-      leftUpperArmRef.current.rotation.y = -pull * 1.2 + (1 - pull) * 0.8 // Raise when pulled, sag when relaxed
+      // When pulled: raise arm (rotate around Y axis to lift), when relaxed: hang straight down
+      leftUpperArmRef.current.rotation.y = -pull * 1.2 // Raise when pulled, 0 when relaxed (hangs straight down)
       leftUpperArmRef.current.rotation.x = pull * 0.5 // Rotate arm outward when pulled
     } else if (leftUpperArmRef.current) {
-      // Gravity sag when no string control
-      leftUpperArmRef.current.rotation.y = 0.8 // Arm hangs down
+      // Natural rest position - arm hangs straight down
+      leftUpperArmRef.current.rotation.y = 0 // Arm hangs straight down
       leftUpperArmRef.current.rotation.x = 0
     }
     // Left Elbow: bends when arm is raised, or straightens when relaxed
     if (leftForearmRef.current && stringControls.leftHand !== undefined) {
       const pull = stringControls.leftHand
-      leftForearmRef.current.rotation.y = -pull * 0.8 + (1 - pull) * 0.3 // Bend when pulled, slight bend when relaxed
+      leftForearmRef.current.rotation.y = -pull * 0.8 // Bend when pulled, 0 when relaxed (straight)
     } else if (leftForearmRef.current) {
-      leftForearmRef.current.rotation.y = 0.3 // Slight natural bend
+      leftForearmRef.current.rotation.y = 0 // Straight when relaxed
     }
 
-    // Right Arm: pulled up by right hand string, or sagged by gravity
+    // Right Arm: pulled up by right hand string, or hangs naturally at rest
     // With the arm rotated -90° around Z, X rotation raises/lowers, Y rotation swings forward/back
     if (rightUpperArmRef.current && stringControls.rightHand !== undefined) {
       const pull = stringControls.rightHand
-      rightUpperArmRef.current.rotation.y = pull * 1.2 - (1 - pull) * 0.8 // Raise when pulled, sag when relaxed (inverted for right)
+      rightUpperArmRef.current.rotation.y = pull * 1.2 // Raise when pulled, 0 when relaxed (hangs straight down)
       rightUpperArmRef.current.rotation.x = -pull * 0.5 // Rotate arm outward when pulled
     } else if (rightUpperArmRef.current) {
-      // Gravity sag when no string control
-      rightUpperArmRef.current.rotation.y = -0.8 // Arm hangs down
+      // Natural rest position - arm hangs straight down
+      rightUpperArmRef.current.rotation.y = 0 // Arm hangs straight down
       rightUpperArmRef.current.rotation.x = 0
     }
     // Right Elbow: bends when arm is raised, or straightens when relaxed
     if (rightForearmRef.current && stringControls.rightHand !== undefined) {
       const pull = stringControls.rightHand
-      rightForearmRef.current.rotation.y = pull * 0.8 - (1 - pull) * 0.3 // Bend when pulled, slight bend when relaxed (inverted for right)
+      rightForearmRef.current.rotation.y = pull * 0.8 // Bend when pulled, 0 when relaxed (straight)
     } else if (rightForearmRef.current) {
-      rightForearmRef.current.rotation.y = -0.3 // Slight natural bend
+      rightForearmRef.current.rotation.y = 0 // Straight when relaxed
     }
 
     // Left Leg: pulled up by left foot string, or hangs down by gravity

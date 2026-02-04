@@ -89,13 +89,13 @@ export default function MarionetteStrings({
     const puppetLeftFootPos = puppetLeftFootLocal.clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
     const puppetRightFootPos = puppetRightFootLocal.clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
 
-    // Control bar attachment points (matching MuJoCo model sites exactly)
+    // Control bar attachment points (matching smaller crossbar)
     // h_center for head and chest - on the stem below crossbar
     const controlCenterLocal = new THREE.Vector3(0, 0, -0.20)
-    // h_left for left hand - left end of crossbar
-    const controlLeftLocal = new THREE.Vector3(-0.18, 0, 0)
-    // h_right for right hand - right end of crossbar
-    const controlRightLocal = new THREE.Vector3(0.18, 0, 0)
+    // h_left for left hand - left end of crossbar (now smaller: -0.12)
+    const controlLeftLocal = new THREE.Vector3(-0.12, 0, 0)
+    // h_right for right hand - right end of crossbar (now smaller: 0.12)
+    const controlRightLocal = new THREE.Vector3(0.12, 0, 0)
     // h_front for left shoulder and left foot - front of crossbar (+Y)
     const controlFrontLocal = new THREE.Vector3(0, 0.06, 0)
     // h_back for right shoulder and right foot - back of crossbar (-Y)
