@@ -30,15 +30,16 @@ export default function StringPositionsDisplay({
   stringEndPositions,
   puppetPositions
 }: StringPositionsDisplayProps) {
+  // Match MuJoCo string names and order: t_head, t_chest, t_l_hand, t_r_hand, t_l_shoulder, t_r_shoulder, t_l_foot, t_r_foot
   const controlPoints = [
-    { key: 'head', label: 'Head' },
-    { key: 'chest', label: 'Chest' },
-    { key: 'leftHand', label: 'L Hand' },
-    { key: 'rightHand', label: 'R Hand' },
-    { key: 'leftShoulder', label: 'L Shoulder' },
-    { key: 'rightShoulder', label: 'R Shoulder' },
-    { key: 'leftFoot', label: 'L Foot' },
-    { key: 'rightFoot', label: 'R Foot' },
+    { key: 'head', label: 't_head', muJoCoName: 't_head' },
+    { key: 'chest', label: 't_chest', muJoCoName: 't_chest' },
+    { key: 'leftHand', label: 't_l_hand', muJoCoName: 't_l_hand' },
+    { key: 'rightHand', label: 't_r_hand', muJoCoName: 't_r_hand' },
+    { key: 'leftShoulder', label: 't_l_shoulder', muJoCoName: 't_l_shoulder' },
+    { key: 'rightShoulder', label: 't_r_shoulder', muJoCoName: 't_r_shoulder' },
+    { key: 'leftFoot', label: 't_l_foot', muJoCoName: 't_l_foot' },
+    { key: 'rightFoot', label: 't_r_foot', muJoCoName: 't_r_foot' },
   ] as const
 
   const formatPosition = (pos: StringPosition | undefined): string => {
