@@ -43,38 +43,40 @@
         <joint name="puppet_free" type="free"/>
 
         <!-- torso -->
-        <geom name="torso" type="capsule" fromto="0 0 0.10   0 0 -0.12" size="0.045"/>
-        <site name="p_chest" pos="0 0 0.05"/>
-        <site name="p_hips"  pos="0 0 -0.10"/>
+        <body name="torso" pos="0 0 0">
+          <geom name="torso" type="capsule" fromto="0 0 0.10   0 0 -0.12" size="0.045"/>
+          <site name="p_chest" pos="0 0 0.05"/>
+          <site name="p_hips"  pos="0 0 -0.10"/>
 
-        <!-- head -->
-        <body name="head" pos="0 0 0.16">
-          <joint name="neck" type="ball" damping="0.5"/>
-          <geom name="head_geom" type="sphere" size="0.05" pos="0 0 0.05" rgba="0.85 0.75 0.55 1"/>
-          <site name="p_head_top" pos="0 0 0.11"/>
-        </body>
-
-        <!-- left arm -->
-        <body name="l_upperarm" pos="0 0 0.06">
-          <joint name="l_shoulder" type="ball" damping="0.8" pos="0 0 0"/>
-          <geom name="l_upperarm_geom" type="capsule" fromto="0 0 0   -0.12 0 0" size="0.02"/>
-          <site name="p_l_shoulder" pos="-0.02 0 0"/>
-          <body name="l_forearm" pos="-0.12 0 0">
-            <joint name="l_elbow" type="hinge" axis="0 1 0" damping="0.4" range="-120 0"/>
-            <geom name="l_forearm_geom" type="capsule" fromto="0 0 0   -0.12 0 0" size="0.018"/>
-            <site name="p_l_hand" pos="-0.12 0 0"/>
+          <!-- head -->
+          <body name="head" pos="0 0 0.16">
+            <joint name="neck" type="ball" damping="0.5"/>
+            <geom name="head_geom" type="sphere" size="0.05" pos="0 0 0.05" rgba="0.85 0.75 0.55 1"/>
+            <site name="p_head_top" pos="0 0 0.11"/>
           </body>
-        </body>
 
-        <!-- right arm -->
-        <body name="r_upperarm" pos="0 0 0.06">
-          <joint name="r_shoulder" type="ball" damping="0.8" pos="0 0 0"/>
-          <geom name="r_upperarm_geom" type="capsule" fromto="0 0 0   0.12 0 0" size="0.02"/>
-          <site name="p_r_shoulder" pos="0.02 0 0"/>
-          <body name="r_forearm" pos="0.12 0 0">
-            <joint name="r_elbow" type="hinge" axis="0 1 0" damping="0.4" range="-120 0"/>
-            <geom name="r_forearm_geom" type="capsule" fromto="0 0 0   0.12 0 0" size="0.018"/>
-            <site name="p_r_hand" pos="0.12 0 0"/>
+          <!-- left arm - connected to torso at shoulder -->
+          <body name="l_upperarm" pos="-0.045 0 0.06">
+            <joint name="l_shoulder" type="ball" damping="0.8" pos="0 0 0"/>
+            <geom name="l_upperarm_geom" type="capsule" fromto="0 0 0   -0.12 0 0" size="0.02" rgba="0.85 0.75 0.55 1"/>
+            <site name="p_l_shoulder" pos="0 0 0"/>
+            <body name="l_forearm" pos="-0.12 0 0">
+              <joint name="l_elbow" type="hinge" axis="0 1 0" damping="0.4" range="-120 0"/>
+              <geom name="l_forearm_geom" type="capsule" fromto="0 0 0   -0.12 0 0" size="0.018" rgba="0.85 0.75 0.55 1"/>
+              <site name="p_l_hand" pos="-0.12 0 0"/>
+            </body>
+          </body>
+
+          <!-- right arm - connected to torso at shoulder -->
+          <body name="r_upperarm" pos="0.045 0 0.06">
+            <joint name="r_shoulder" type="ball" damping="0.8" pos="0 0 0"/>
+            <geom name="r_upperarm_geom" type="capsule" fromto="0 0 0   0.12 0 0" size="0.02" rgba="0.85 0.75 0.55 1"/>
+            <site name="p_r_shoulder" pos="0 0 0"/>
+            <body name="r_forearm" pos="0.12 0 0">
+              <joint name="r_elbow" type="hinge" axis="0 1 0" damping="0.4" range="-120 0"/>
+              <geom name="r_forearm_geom" type="capsule" fromto="0 0 0   0.12 0 0" size="0.018" rgba="0.85 0.75 0.55 1"/>
+              <site name="p_r_hand" pos="0.12 0 0"/>
+            </body>
           </body>
         </body>
 
