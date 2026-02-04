@@ -1,19 +1,9 @@
-import { useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei'
 import PuppetScene from './components/PuppetScene'
-import ControlPanel from './components/ControlPanel'
 import './App.css'
 
 function App() {
-  const [command, setCommand] = useState('')
-  const [isExecuting] = useState(false) // Managed by PuppetScene
-
-  const handleCommand = async (cmd: string) => {
-    setCommand(cmd)
-    // isExecuting will be managed by PuppetScene via useLLMController
-  }
-
   return (
     <div className="app">
       <div className="canvas-container">
@@ -27,7 +17,7 @@ function App() {
             shadow-mapSize-width={2048}
             shadow-mapSize-height={2048}
           />
-          <PuppetScene command={command} isExecuting={isExecuting} />
+          <PuppetScene command="" isExecuting={false} />
           <OrbitControls
             enablePan={true}
             enableZoom={true}
@@ -37,7 +27,6 @@ function App() {
           />
         </Canvas>
       </div>
-      <ControlPanel onCommand={handleCommand} isExecuting={isExecuting} />
     </div>
   )
 }
