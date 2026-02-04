@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 
@@ -36,16 +36,19 @@ export default function MarionetteControl({
 }: MarionetteControlProps) {
   const controlRef = useRef<THREE.Group>(null)
   
-  // Use the external ref if provided, otherwise use internal ref
-  const actualControlRef = externalControlBarRef || controlRef
+  // Sync internal ref to external ref if provided (so strings can track it)
+  useEffect(() => {
+    if (externalControlBarRef && controlRef.current) {
+      // Update external ref to point to our internal ref's current value
+      (externalControlBarRef as React.MutableRefObject<THREE.Group | null>).current = controlRef.current
+    }
+  }, [externalControlBarRef])
   
-  // Sync internal ref with external ref if provided
+  // Also sync in useFrame to handle updates (runs every frame)
   useFrame(() => {
-    if (externalControlBarRef && controlRef.current && externalControlBarRef.current !== controlRef.current) {
-      // Copy position/rotation to external ref
-      if (externalControlBarRef.current) {
-        externalControlBarRef.current.position.copy(controlRef.current.position)
-        externalControlBarRef.current.rotation.copy(controlRef.current.rotation)
+    if (externalControlBarRef && controlRef.current) {
+      if (externalControlBarRef.current !== controlRef.current) {
+        (externalControlBarRef as React.MutableRefObject<THREE.Group | null>).current = controlRef.current
       }
     }
   })
@@ -80,8 +83,7 @@ export default function MarionetteControl({
 
   // Handle pointer move for dragging (called on the mesh)
   const handlePointerMove = (e: any) => {
-    const ref = actualControlRef.current || controlRef.current
-    if (!isDragging || !ref) return
+    if (!isDragging || !controlRef.current) return
     e.stopPropagation()
     
     // Use the intersection point from the event
@@ -123,8 +125,7 @@ export default function MarionetteControl({
 
   // Update control bar transform
   useFrame((state) => {
-    const ref = actualControlRef.current || controlRef.current
-    if (ref) {
+    if (controlRef.current) {
       // Apply control sequence if provided (from commands)
       if (controlSequence && sequenceStartTime !== null && sequenceStartTime !== undefined) {
         const elapsed = state.clock.elapsedTime - sequenceStartTime
@@ -154,15 +155,14 @@ export default function MarionetteControl({
       }
       
       // Update the control ref position/rotation so strings can track it
-      ref.position.copy(controlPosition)
-      ref.rotation.copy(controlRotation)
+      controlRef.current.position.copy(controlPosition)
+      controlRef.current.rotation.copy(controlRotation)
     }
   })
 
   // Calculate string controls based on control bar position and rotation
   useFrame(() => {
-    const ref = actualControlRef.current || controlRef.current
-    if (onStringControlsChange && ref) {
+    if (onStringControlsChange && controlRef.current) {
       const baseY = position[1]
       const currentY = controlPosition.y
       
@@ -196,7 +196,13 @@ export default function MarionetteControl({
   })
 
   return (
-    <group ref={actualControlRef}>
+    <group ref={controlRef}>
+      {/* Small visible indicator for control bar position (for debugging) */}
+      <mesh position={[0, 0, 0]}>
+        <sphereGeometry args={[0.02, 8, 8]} />
+        <meshStandardMaterial color="#ffff00" emissive="#ffff00" emissiveIntensity={0.5} />
+      </mesh>
+      
       {/* Invisible control bar - functionality only, no visual */}
       <mesh
         onPointerDown={handlePointerDown}
