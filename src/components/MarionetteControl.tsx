@@ -206,31 +206,39 @@ export default function MarionetteControl({
   useFrame(() => {
     if (onStringControlsChange && controlRef.current) {
       const baseY = position[1]
+      const baseX = position[0]
       const currentY = controlPosition.y
+      const currentX = controlPosition.x
       
       // String controls based on vertical position (0-1, where 1 is fully pulled)
       // When control bar is higher, strings are more relaxed (lower value)
       // When control bar is lower, strings are more pulled (higher value)
       const verticalPull = Math.max(0, Math.min(1, (baseY - currentY) / 0.5))
       
+      // Horizontal position affects which side's strings are pulled
+      // When control bar moves left (negative X), left side strings are pulled more
+      // When control bar moves right (positive X), right side strings are pulled more
+      const horizontalOffset = (currentX - baseX) / 0.3 // Scale horizontal movement
+      
       // Rotation affects which strings are pulled
-      const rotX = controlRotation.x // Forward/backward tilt
-      const rotZ = controlRotation.z // Sideways tilt
+      const rotX = controlRotation.x // Forward/backward tilt (pitch)
+      const rotZ = controlRotation.z // Sideways tilt (roll)
       
       const controls: any = {
         head: Math.max(0, Math.min(1, verticalPull + rotX * 0.3)),
-        leftHand: Math.max(0, Math.min(1, verticalPull - rotZ * 0.3)),
-        rightHand: Math.max(0, Math.min(1, verticalPull + rotZ * 0.3)),
+        // Fix: Invert the horizontal offset signs - when control bar moves left, left arm should be pulled
+        leftHand: Math.max(0, Math.min(1, verticalPull - rotZ * 0.3 + horizontalOffset * 0.5)),
+        rightHand: Math.max(0, Math.min(1, verticalPull + rotZ * 0.3 - horizontalOffset * 0.5)),
       }
 
       if (stringCount >= 4) {
         controls.torso = Math.max(0, Math.min(1, verticalPull))
       }
       if (stringCount >= 5) {
-        controls.leftFoot = Math.max(0, Math.min(1, verticalPull - rotX * 0.2))
+        controls.leftFoot = Math.max(0, Math.min(1, verticalPull - rotX * 0.2 + horizontalOffset * 0.3))
       }
       if (stringCount >= 6) {
-        controls.rightFoot = Math.max(0, Math.min(1, verticalPull - rotX * 0.2))
+        controls.rightFoot = Math.max(0, Math.min(1, verticalPull - rotX * 0.2 - horizontalOffset * 0.3))
       }
 
       onStringControlsChange(controls)

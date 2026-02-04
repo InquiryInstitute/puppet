@@ -27,7 +27,11 @@ function App() {
       />
       <div className="canvas-container">
         <Canvas shadows>
-          <PerspectiveCamera makeDefault position={[0, 2, 5]} />
+          <PerspectiveCamera 
+            makeDefault 
+            position={[0.02, 2.85, 4.67]}
+            rotation={[-0.176, -0.007, -0.002]} // Pitch: -10.1°, Yaw: -0.4°, Roll: -0.1° (converted to radians)
+          />
           <ambientLight intensity={0.5} />
           <directionalLight
             position={[5, 10, 5]}
