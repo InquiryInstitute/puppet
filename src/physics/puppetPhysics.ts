@@ -92,6 +92,7 @@ export function createDefaultJointConfigs(): PuppetPhysicsConfig {
 
 /**
  * Apply string forces to puppet joints
+ * Forces propagate up the hierarchy: child forces pull on parents
  */
 export function applyStringForcesToJoints(
   stringStates: Map<string, StringState>,
@@ -108,7 +109,8 @@ export function applyStringForcesToJoints(
     return localPos.clone().applyQuaternion(baseQuat).add(puppetBasePosition)
   }
 
-  // Apply head string force
+  // Apply head string force to head
+  // Head is connected to torso, so this force will pull the torso (and whole puppet)
   const headString = stringStates.get('head')
   if (headString) {
     const headWorldPos = getWorldPosition(physicsState.head.position)
@@ -120,6 +122,10 @@ export function applyStringForcesToJoints(
     )
     physicsState.head.force.add(force)
     physicsState.head.torque.add(torque)
+    
+    // Propagate force to torso (parent): pulling head pulls the whole body
+    // The head force should pull the torso, which moves the whole puppet
+    physicsState.torso.force.add(force.clone().multiplyScalar(0.8)) // 80% of head force propagates to torso
   }
 
   // Apply chest string force to torso
@@ -137,6 +143,7 @@ export function applyStringForcesToJoints(
   }
 
   // Apply left hand string force to left elbow (end of arm chain)
+  // Force propagates: elbow → shoulder → torso
   const leftHandString = stringStates.get('leftHand')
   if (leftHandString) {
     const leftElbowWorldPos = getWorldPosition(physicsState.leftElbow.position)
@@ -148,9 +155,15 @@ export function applyStringForcesToJoints(
     )
     physicsState.leftElbow.force.add(force)
     physicsState.leftElbow.torque.add(torque)
+    
+    // Propagate to shoulder (parent)
+    physicsState.leftShoulder.force.add(force.clone().multiplyScalar(0.7))
+    // Propagate to torso (grandparent)
+    physicsState.torso.force.add(force.clone().multiplyScalar(0.5))
   }
 
   // Apply right hand string force to right elbow
+  // Force propagates: elbow → shoulder → torso
   const rightHandString = stringStates.get('rightHand')
   if (rightHandString) {
     const rightElbowWorldPos = getWorldPosition(physicsState.rightElbow.position)
@@ -162,9 +175,15 @@ export function applyStringForcesToJoints(
     )
     physicsState.rightElbow.force.add(force)
     physicsState.rightElbow.torque.add(torque)
+    
+    // Propagate to shoulder (parent)
+    physicsState.rightShoulder.force.add(force.clone().multiplyScalar(0.7))
+    // Propagate to torso (grandparent)
+    physicsState.torso.force.add(force.clone().multiplyScalar(0.5))
   }
 
   // Apply left shoulder string force
+  // Force propagates: shoulder → torso
   const leftShoulderString = stringStates.get('leftShoulder')
   if (leftShoulderString) {
     const leftShoulderWorldPos = getWorldPosition(physicsState.leftShoulder.position)
@@ -176,9 +195,13 @@ export function applyStringForcesToJoints(
     )
     physicsState.leftShoulder.force.add(force)
     physicsState.leftShoulder.torque.add(torque)
+    
+    // Propagate to torso (parent)
+    physicsState.torso.force.add(force.clone().multiplyScalar(0.8))
   }
 
   // Apply right shoulder string force
+  // Force propagates: shoulder → torso
   const rightShoulderString = stringStates.get('rightShoulder')
   if (rightShoulderString) {
     const rightShoulderWorldPos = getWorldPosition(physicsState.rightShoulder.position)
@@ -190,6 +213,9 @@ export function applyStringForcesToJoints(
     )
     physicsState.rightShoulder.force.add(force)
     physicsState.rightShoulder.torque.add(torque)
+    
+    // Propagate to torso (parent)
+    physicsState.torso.force.add(force.clone().multiplyScalar(0.8))
   }
 
   // Apply left foot string force to left knee

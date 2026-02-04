@@ -62,6 +62,7 @@ export default function MarionetteStrings({
 }: MarionetteStringsProps) {
   const stringsRef = useRef<THREE.Group>(null)
   const [stringLines, setStringLines] = useState<JSX.Element[]>([])
+  const [debugSpheres, setDebugSpheres] = useState<JSX.Element[]>([])
   const [draggedString, setDraggedString] = useState<string | null>(null)
   const [dragStartPos, setDragStartPos] = useState<THREE.Vector3 | null>(null)
   const { gl } = useThree()
@@ -401,21 +402,21 @@ export default function MarionetteStrings({
           curvePoints[Math.floor(curvePoints.length * 0.75)],
         ]
         
-        return (
+      return (
           <group key={config.name}>
-            <Line
+        <Line
               points={pointsArray}
-              color={config.color}
+          color={config.color}
               lineWidth={draggedString === config.name ? 5 : 3}
               transparent={false}
               opacity={1.0}
             />
-            {/* Debug: Show exact start point of string to verify it matches puppet attachment */}
+            {/* Debug: Show exact start point of string - use the same position as the string itself */}
             <mesh position={[config.start.x, config.start.y, config.start.z]}>
               <sphereGeometry args={[0.015, 8, 8]} />
               <meshStandardMaterial color="white" emissive="white" emissiveIntensity={1.0} />
             </mesh>
-            {/* Debug: Show exact end point of string to verify it matches control bar sphere */}
+            {/* Debug: Show exact end point of string - use the same position as the string itself */}
             <mesh position={[config.end.x, config.end.y, config.end.z]}>
               <sphereGeometry args={[0.015, 8, 8]} />
               <meshStandardMaterial color="white" emissive="white" emissiveIntensity={1.0} />
@@ -440,95 +441,99 @@ export default function MarionetteStrings({
       })
     
     setStringLines(lines)
+    
+    // Create debug spheres using the exact same positions as the strings
+    const spheres: JSX.Element[] = []
+    
+    // Control bar debug spheres
+    spheres.push(
+      <mesh key="control-center" position={[controlCenterPos.x, controlCenterPos.y, controlCenterPos.z]}>
+        <sphereGeometry args={[0.02, 8, 8]} />
+        <meshStandardMaterial color="yellow" emissive="yellow" emissiveIntensity={0.5} />
+      </mesh>
+    )
+    spheres.push(
+      <mesh key="control-left" position={[controlLeftPos.x, controlLeftPos.y, controlLeftPos.z]}>
+        <sphereGeometry args={[0.02, 8, 8]} />
+        <meshStandardMaterial color="cyan" emissive="cyan" emissiveIntensity={0.5} />
+      </mesh>
+    )
+    spheres.push(
+      <mesh key="control-right" position={[controlRightPos.x, controlRightPos.y, controlRightPos.z]}>
+        <sphereGeometry args={[0.02, 8, 8]} />
+        <meshStandardMaterial color="magenta" emissive="magenta" emissiveIntensity={0.5} />
+      </mesh>
+    )
+    spheres.push(
+      <mesh key="control-front" position={[controlFrontPos.x, controlFrontPos.y, controlFrontPos.z]}>
+        <sphereGeometry args={[0.02, 8, 8]} />
+        <meshStandardMaterial color="lime" emissive="lime" emissiveIntensity={0.5} />
+      </mesh>
+    )
+    spheres.push(
+      <mesh key="control-back" position={[controlBackPos.x, controlBackPos.y, controlBackPos.z]}>
+        <sphereGeometry args={[0.02, 8, 8]} />
+        <meshStandardMaterial color="orange" emissive="orange" emissiveIntensity={0.5} />
+      </mesh>
+    )
+    
+    // Puppet debug spheres - use the exact same positions as string start points
+    spheres.push(
+      <mesh key="puppet-head" position={[puppetHeadPos.x, puppetHeadPos.y, puppetHeadPos.z]}>
+        <sphereGeometry args={[0.02, 8, 8]} />
+        <meshStandardMaterial color="red" emissive="red" emissiveIntensity={0.5} />
+      </mesh>
+    )
+    spheres.push(
+      <mesh key="puppet-chest" position={[puppetChestPos.x, puppetChestPos.y, puppetChestPos.z]}>
+        <sphereGeometry args={[0.02, 8, 8]} />
+        <meshStandardMaterial color="pink" emissive="pink" emissiveIntensity={0.5} />
+      </mesh>
+    )
+    spheres.push(
+      <mesh key="puppet-leftHand" position={[puppetLeftHandPos.x, puppetLeftHandPos.y, puppetLeftHandPos.z]}>
+        <sphereGeometry args={[0.02, 8, 8]} />
+        <meshStandardMaterial color="blue" emissive="blue" emissiveIntensity={0.5} />
+      </mesh>
+    )
+    spheres.push(
+      <mesh key="puppet-rightHand" position={[puppetRightHandPos.x, puppetRightHandPos.y, puppetRightHandPos.z]}>
+        <sphereGeometry args={[0.02, 8, 8]} />
+        <meshStandardMaterial color="green" emissive="green" emissiveIntensity={0.5} />
+      </mesh>
+    )
+    spheres.push(
+      <mesh key="puppet-leftShoulder" position={[puppetLeftShoulderPos.x, puppetLeftShoulderPos.y, puppetLeftShoulderPos.z]}>
+        <sphereGeometry args={[0.02, 8, 8]} />
+        <meshStandardMaterial color="cyan" emissive="cyan" emissiveIntensity={0.5} />
+      </mesh>
+    )
+    spheres.push(
+      <mesh key="puppet-rightShoulder" position={[puppetRightShoulderPos.x, puppetRightShoulderPos.y, puppetRightShoulderPos.z]}>
+        <sphereGeometry args={[0.02, 8, 8]} />
+        <meshStandardMaterial color="magenta" emissive="magenta" emissiveIntensity={0.5} />
+      </mesh>
+    )
+    spheres.push(
+      <mesh key="puppet-leftFoot" position={[puppetLeftFootPos.x, puppetLeftFootPos.y, puppetLeftFootPos.z]}>
+        <sphereGeometry args={[0.02, 8, 8]} />
+        <meshStandardMaterial color="yellow" emissive="yellow" emissiveIntensity={0.5} />
+      </mesh>
+    )
+    spheres.push(
+      <mesh key="puppet-rightFoot" position={[puppetRightFootPos.x, puppetRightFootPos.y, puppetRightFootPos.z]}>
+        <sphereGeometry args={[0.02, 8, 8]} />
+        <meshStandardMaterial color="orange" emissive="orange" emissiveIntensity={0.5} />
+      </mesh>
+    )
+    
+    setDebugSpheres(spheres)
   })
 
   return (
     <group ref={stringsRef}>
       {stringLines}
-      {/* Debug: Show attachment points as small spheres - using positions from useFrame */}
-      {controlBarPositionsRef.current.center && (
-        <>
-          <mesh position={[controlBarPositionsRef.current.center.x, controlBarPositionsRef.current.center.y, controlBarPositionsRef.current.center.z]}>
-            <sphereGeometry args={[0.02, 8, 8]} />
-            <meshStandardMaterial color="yellow" emissive="yellow" emissiveIntensity={0.5} />
-          </mesh>
-          {controlBarPositionsRef.current.left && (
-            <mesh position={[controlBarPositionsRef.current.left.x, controlBarPositionsRef.current.left.y, controlBarPositionsRef.current.left.z]}>
-              <sphereGeometry args={[0.02, 8, 8]} />
-              <meshStandardMaterial color="cyan" emissive="cyan" emissiveIntensity={0.5} />
-            </mesh>
-          )}
-          {controlBarPositionsRef.current.right && (
-            <mesh position={[controlBarPositionsRef.current.right.x, controlBarPositionsRef.current.right.y, controlBarPositionsRef.current.right.z]}>
-              <sphereGeometry args={[0.02, 8, 8]} />
-              <meshStandardMaterial color="magenta" emissive="magenta" emissiveIntensity={0.5} />
-            </mesh>
-          )}
-          {controlBarPositionsRef.current.front && (
-            <mesh position={[controlBarPositionsRef.current.front.x, controlBarPositionsRef.current.front.y, controlBarPositionsRef.current.front.z]}>
-              <sphereGeometry args={[0.02, 8, 8]} />
-              <meshStandardMaterial color="lime" emissive="lime" emissiveIntensity={0.5} />
-            </mesh>
-          )}
-          {controlBarPositionsRef.current.back && (
-            <mesh position={[controlBarPositionsRef.current.back.x, controlBarPositionsRef.current.back.y, controlBarPositionsRef.current.back.z]}>
-              <sphereGeometry args={[0.02, 8, 8]} />
-              <meshStandardMaterial color="orange" emissive="orange" emissiveIntensity={0.5} />
-            </mesh>
-          )}
-        </>
-      )}
-      {/* Debug: Show puppet attachment points - using positions from useFrame */}
-      {puppetPositionsRef.current.head && (
-        <>
-          <mesh position={[puppetPositionsRef.current.head.x, puppetPositionsRef.current.head.y, puppetPositionsRef.current.head.z]}>
-            <sphereGeometry args={[0.02, 8, 8]} />
-            <meshStandardMaterial color="red" emissive="red" emissiveIntensity={0.5} />
-          </mesh>
-          {puppetPositionsRef.current.chest && (
-            <mesh position={[puppetPositionsRef.current.chest.x, puppetPositionsRef.current.chest.y, puppetPositionsRef.current.chest.z]}>
-              <sphereGeometry args={[0.02, 8, 8]} />
-              <meshStandardMaterial color="pink" emissive="pink" emissiveIntensity={0.5} />
-            </mesh>
-          )}
-          {puppetPositionsRef.current.leftHand && (
-            <mesh position={[puppetPositionsRef.current.leftHand.x, puppetPositionsRef.current.leftHand.y, puppetPositionsRef.current.leftHand.z]}>
-              <sphereGeometry args={[0.02, 8, 8]} />
-              <meshStandardMaterial color="blue" emissive="blue" emissiveIntensity={0.5} />
-            </mesh>
-          )}
-          {puppetPositionsRef.current.rightHand && (
-            <mesh position={[puppetPositionsRef.current.rightHand.x, puppetPositionsRef.current.rightHand.y, puppetPositionsRef.current.rightHand.z]}>
-              <sphereGeometry args={[0.02, 8, 8]} />
-              <meshStandardMaterial color="green" emissive="green" emissiveIntensity={0.5} />
-            </mesh>
-          )}
-          {puppetPositionsRef.current.leftShoulder && (
-            <mesh position={[puppetPositionsRef.current.leftShoulder.x, puppetPositionsRef.current.leftShoulder.y, puppetPositionsRef.current.leftShoulder.z]}>
-              <sphereGeometry args={[0.02, 8, 8]} />
-              <meshStandardMaterial color="cyan" emissive="cyan" emissiveIntensity={0.5} />
-            </mesh>
-          )}
-          {puppetPositionsRef.current.rightShoulder && (
-            <mesh position={[puppetPositionsRef.current.rightShoulder.x, puppetPositionsRef.current.rightShoulder.y, puppetPositionsRef.current.rightShoulder.z]}>
-              <sphereGeometry args={[0.02, 8, 8]} />
-              <meshStandardMaterial color="magenta" emissive="magenta" emissiveIntensity={0.5} />
-            </mesh>
-          )}
-          {puppetPositionsRef.current.leftFoot && (
-            <mesh position={[puppetPositionsRef.current.leftFoot.x, puppetPositionsRef.current.leftFoot.y, puppetPositionsRef.current.leftFoot.z]}>
-              <sphereGeometry args={[0.02, 8, 8]} />
-              <meshStandardMaterial color="yellow" emissive="yellow" emissiveIntensity={0.5} />
-            </mesh>
-          )}
-          {puppetPositionsRef.current.rightFoot && (
-            <mesh position={[puppetPositionsRef.current.rightFoot.x, puppetPositionsRef.current.rightFoot.y, puppetPositionsRef.current.rightFoot.z]}>
-              <sphereGeometry args={[0.02, 8, 8]} />
-              <meshStandardMaterial color="orange" emissive="orange" emissiveIntensity={0.5} />
-            </mesh>
-          )}
-        </>
-      )}
+      {debugSpheres}
     </group>
   )
 }

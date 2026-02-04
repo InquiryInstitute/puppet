@@ -157,7 +157,7 @@ export default function Puppet({
         puppetAttachmentPoints
       )
 
-      // Apply string forces to joints
+      // Apply string forces to joints (forces propagate up hierarchy: head→torso, arms→shoulders→torso)
       applyStringForcesToJoints(
         stringStates,
         physicsStateRef.current,
@@ -165,6 +165,41 @@ export default function Puppet({
         puppetBasePos,
         puppetBaseRot
       )
+
+      // Apply torso force to puppet base position
+      // The torso is the root, so all forces that propagate to it move the whole puppet
+      // Torso force accumulates forces from all child joints (head, arms, etc.)
+      const torsoForce = physicsStateRef.current.torso.force.clone()
+      
+      // Apply force to base position (F = ma, so a = F/m)
+      const baseMass = MASS
+      const baseAcceleration = torsoForce.clone().divideScalar(baseMass)
+      
+      // Update base velocity from acceleration
+      velocityRef.current.add(baseAcceleration.clone().multiplyScalar(delta))
+      
+      // Apply damping to base velocity
+      velocityRef.current.multiplyScalar(DAMPING)
+      
+      // Update base position from velocity
+      puppetBasePos.add(velocityRef.current.clone().multiplyScalar(delta))
+      
+      // Apply gravity to base
+      const gravityForce = GRAVITY / baseMass
+      velocityRef.current.y += gravityForce * delta
+      
+      // Floor collision
+      const STAGE_Y = 0
+      const FOOT_BOTTOM_OFFSET = -0.625
+      if (puppetBasePos.y + FOOT_BOTTOM_OFFSET < STAGE_Y) {
+        puppetBasePos.y = STAGE_Y - FOOT_BOTTOM_OFFSET
+        if (velocityRef.current.y < 0) {
+          velocityRef.current.y = 0
+        }
+      }
+      
+      // Update puppet group position from physics
+      group.position.copy(puppetBasePos)
 
       // Apply gravity
       applyGravity(physicsStateRef.current)

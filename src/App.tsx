@@ -1,18 +1,19 @@
 import { useEffect } from 'react'
-import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom'
 import Splash from './components/Splash'
 import Simulation from './components/Simulation'
 import KleistEssay from './components/KleistEssay'
 
 // Handle GitHub Pages 404.html redirect
+// This runs immediately when the app loads to fix the URL before React Router renders
 function RedirectHandler() {
-  const location = useLocation()
   const navigate = useNavigate()
 
+  // Run synchronously on mount to fix URL immediately
   useEffect(() => {
     // Check if we're on GitHub Pages and have a redirect query string
     // The 404.html redirects to /?/path, so we need to extract the path
-    const queryParams = new URLSearchParams(location.search)
+    const queryParams = new URLSearchParams(window.location.search)
     const redirectPath = queryParams.get('/')
     
     if (redirectPath) {
@@ -23,13 +24,13 @@ function RedirectHandler() {
       if (!path.startsWith('/')) {
         path = '/' + path
       }
-      // Clear the query parameter and navigate
-      const newUrl = window.location.origin + path + window.location.hash
-      window.history.replaceState({}, '', newUrl)
-      // Force navigation
+      // Immediately replace the URL in the browser (synchronously, before any rendering)
+      // This prevents the flash of the wrong URL
+      window.history.replaceState({}, '', path + window.location.hash)
+      // Force navigation (this will update React Router's internal state)
       navigate(path, { replace: true })
     }
-  }, [location.search, navigate]) // Only depend on search, not full location
+  }, [navigate]) // Include navigate in dependencies
 
   return null
 }

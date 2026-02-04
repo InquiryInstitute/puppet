@@ -67,6 +67,7 @@ export default function MarionetteControl({
       pressedKeysRef.current.add(e.key)
       // Also track modifier keys
       if (e.altKey) pressedKeysRef.current.add('Alt')
+      if (e.shiftKey) pressedKeysRef.current.add('Shift')
       if (e.metaKey) pressedKeysRef.current.add('Meta')
     }
     
@@ -74,6 +75,7 @@ export default function MarionetteControl({
       pressedKeysRef.current.delete(e.key)
       // Also track modifier keys
       if (!e.altKey) pressedKeysRef.current.delete('Alt')
+      if (!e.shiftKey) pressedKeysRef.current.delete('Shift')
       if (!e.metaKey) pressedKeysRef.current.delete('Meta')
     }
     
@@ -112,7 +114,7 @@ export default function MarionetteControl({
       }
       
       // Option + Up/Down: move in Z (forward/back)
-      if (pressedKeys.has('Alt') && !pressedKeys.has('Meta')) {
+      if (pressedKeys.has('Alt') && !pressedKeys.has('Shift')) {
         if (pressedKeys.has('ArrowUp')) {
           newPos.z += MOVE_SPEED * delta
         }
@@ -128,7 +130,7 @@ export default function MarionetteControl({
       const newRot = prev.clone()
       
       // Option + arrows: rotate control bar (tilt and pitch)
-      if (pressedKeys.has('Alt') && !pressedKeys.has('Meta')) {
+      if (pressedKeys.has('Alt') && !pressedKeys.has('Shift')) {
         // Option + Left/Right: rotate around Y axis (yaw/tilt)
         if (pressedKeys.has('ArrowLeft')) {
           newRot.y += ROTATE_SPEED * delta
@@ -145,8 +147,8 @@ export default function MarionetteControl({
         }
       }
       
-      // Cmd + Option + Left/Right: rotate around Z axis (roll)
-      if (pressedKeys.has('Alt') && pressedKeys.has('Meta')) {
+      // Shift + Option + Left/Right: rotate around Z axis (roll)
+      if (pressedKeys.has('Alt') && pressedKeys.has('Shift')) {
         if (pressedKeys.has('ArrowLeft')) {
           newRot.z += ROTATE_SPEED * delta
         }
