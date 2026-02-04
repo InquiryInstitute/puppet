@@ -31,7 +31,9 @@ export default function Puppet({ stringControls, controlBarRef, onStringPull }: 
 
   // Gravity simulation with mass
   const velocityRef = useRef(new THREE.Vector3(0, 0, 0))
-  const puppetBaseYRef = useRef(0.57) // Base Y position - feet should touch stage (stage at y=0, feet at -0.57 relative to torso)
+  // Feet are at y=-0.625 relative to torso center (hip at -0.2, thigh extends -0.1, shin extends -0.1, foot at -0.225)
+  // Stage is at y=0, so puppet base (torso center) should be at y=0.625 for feet to touch stage
+  const puppetBaseYRef = useRef(0.625)
   const puppetBaseXRef = useRef(0) // Horizontal position constraint
   const puppetBaseZRef = useRef(0) // Depth position constraint
   const MASS = 2.0 // Puppet mass (kg) - makes it heavier, harder to lift
@@ -78,9 +80,9 @@ export default function Puppet({ stringControls, controlBarRef, onStringPull }: 
     puppetBaseZRef.current += velocityRef.current.z * delta
     
     // Floor collision - puppet can't fall below stage
-    // Feet are at y = -0.57 relative to torso (torso at y=0, feet extend down 0.57)
-    // Stage is at y=0, so puppet base (torso center) must be at least 0.57 above stage
-    const floorY = 0.57 // Minimum height so feet touch stage
+    // Feet are at y = -0.625 relative to torso center
+    // Stage is at y=0, so puppet base (torso center) must be at least 0.625 above stage
+    const floorY = 0.625 // Minimum height so feet touch stage
     if (puppetBaseYRef.current < floorY) {
       puppetBaseYRef.current = floorY
       velocityRef.current.y = Math.max(0, velocityRef.current.y) // Can't have downward velocity when on ground
@@ -216,13 +218,13 @@ export default function Puppet({ stringControls, controlBarRef, onStringPull }: 
   })
 
   return (
-    <group ref={groupRef} position={[0, 0.57, 0]}>
+    <group ref={groupRef} position={[0, 0.625, 0]}>
       {/* Marionette strings */}
       <MarionetteStrings 
         puppetRef={groupRef} 
         controlBarRef={controlBarRef}
         stringControls={stringControls}
-        puppetPosition={[0, 0.57, 0]}
+        puppetPosition={[0, 0.625, 0]}
         onStringPull={onStringPull}
       />
 
