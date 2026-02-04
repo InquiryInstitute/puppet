@@ -197,21 +197,107 @@ export default function MarionetteControl({
 
   return (
     <group ref={controlRef}>
-      {/* Small visible indicator for control bar position (for debugging) */}
-      <mesh position={[0, 0, 0]}>
-        <sphereGeometry args={[0.02, 8, 8]} />
-        <meshStandardMaterial color="#ffff00" emissive="#ffff00" emissiveIntensity={0.5} />
+      {/* Crossbar (horizontal bar) */}
+      <mesh
+        position={[0, 0, 0]}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
+        castShadow
+      >
+        <cylinderGeometry args={[0.01, 0.01, 0.36, 8]} />
+        <meshStandardMaterial 
+          color="#8b7355" 
+          metalness={0.3}
+          roughness={0.7}
+        />
       </mesh>
       
-      {/* Invisible control bar - functionality only, no visual */}
+      {/* Stem (vertical handle) */}
       <mesh
+        position={[0, 0, -0.10]}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
+        rotation={[Math.PI / 2, 0, 0]}
+        castShadow
+      >
+        <cylinderGeometry args={[0.008, 0.008, 0.20, 8]} />
+        <meshStandardMaterial 
+          color="#6b5d4a" 
+          metalness={0.3}
+          roughness={0.7}
+        />
+      </mesh>
+      
+      {/* String attachment points (visible pegs) */}
+      {/* Center (head and chest) */}
+      <mesh position={[0, 0, -0.20]} castShadow>
+        <sphereGeometry args={[0.015, 8, 8]} />
+        <meshStandardMaterial 
+          color="#d4af37" 
+          emissive="#d4af37"
+          emissiveIntensity={0.3}
+          metalness={0.8}
+        />
+      </mesh>
+      
+      {/* Left end (left hand) */}
+      <mesh position={[-0.18, 0, 0]} castShadow>
+        <sphereGeometry args={[0.015, 8, 8]} />
+        <meshStandardMaterial 
+          color="#d4af37" 
+          emissive="#d4af37"
+          emissiveIntensity={0.3}
+          metalness={0.8}
+        />
+      </mesh>
+      
+      {/* Right end (right hand) */}
+      <mesh position={[0.18, 0, 0]} castShadow>
+        <sphereGeometry args={[0.015, 8, 8]} />
+        <meshStandardMaterial 
+          color="#d4af37" 
+          emissive="#d4af37"
+          emissiveIntensity={0.3}
+          metalness={0.8}
+        />
+      </mesh>
+      
+      {/* Front (left shoulder and left foot) */}
+      <mesh position={[0, 0.06, 0]} castShadow>
+        <sphereGeometry args={[0.012, 8, 8]} />
+        <meshStandardMaterial 
+          color="#d4af37" 
+          emissive="#d4af37"
+          emissiveIntensity={0.3}
+          metalness={0.8}
+        />
+      </mesh>
+      
+      {/* Back (right shoulder and right foot) */}
+      <mesh position={[0, -0.06, 0]} castShadow>
+        <sphereGeometry args={[0.012, 8, 8]} />
+        <meshStandardMaterial 
+          color="#d4af37" 
+          emissive="#d4af37"
+          emissiveIntensity={0.3}
+          metalness={0.8}
+        />
+      </mesh>
+      
+      {/* Extended invisible hitbox for easier dragging */}
+      <mesh
+        position={[0, 0, 0]}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
         visible={false}
       >
-        <boxGeometry args={[0.5, 0.5, 0.5]} />
+        <boxGeometry args={[0.5, 0.3, 0.5]} />
       </mesh>
     </group>
   )
