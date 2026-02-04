@@ -69,18 +69,17 @@ export default function MarionetteStrings({
       return
     }
     
-    // Get control bar world position (updates every frame)
-    const controlBarWorldPos = new THREE.Vector3()
-    const controlBarWorldQuat = new THREE.Quaternion()
-    const controlBarWorldScale = new THREE.Vector3()
+    // Get control bar world matrix (updates every frame)
+    const controlBarWorldMatrix = new THREE.Matrix4()
     
     if (controlBarRef?.current) {
-      controlBarRef.current.getWorldPosition(controlBarWorldPos)
-      controlBarRef.current.getWorldQuaternion(controlBarWorldQuat)
-      controlBarRef.current.getWorldScale(controlBarWorldScale)
+      // Update world matrix to ensure it's current
+      controlBarRef.current.updateWorldMatrix(true, false)
+      controlBarWorldMatrix.copy(controlBarRef.current.matrixWorld)
     } else {
       // Default position above puppet if no control bar
-      controlBarWorldPos.set(puppetPosition[0], puppetPosition[1] + 1.5, puppetPosition[2])
+      controlBarWorldMatrix.identity()
+      controlBarWorldMatrix.setPosition(puppetPosition[0], puppetPosition[1] + 1.5, puppetPosition[2])
     }
 
     // Get puppet world position
@@ -166,12 +165,12 @@ export default function MarionetteStrings({
     // h_back for right shoulder and right foot - back of crossbar (-Z, away from camera)
     const controlBackLocal = new THREE.Vector3(0, 0, -0.06)
 
-    // Transform to world space - create new Vector3 instances to avoid mutation
-    const controlCenterPos = new THREE.Vector3().copy(controlCenterLocal).applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
-    const controlLeftPos = new THREE.Vector3().copy(controlLeftLocal).applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
-    const controlRightPos = new THREE.Vector3().copy(controlRightLocal).applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
-    const controlFrontPos = new THREE.Vector3().copy(controlFrontLocal).applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
-    const controlBackPos = new THREE.Vector3().copy(controlBackLocal).applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
+    // Transform to world space using the control bar's world matrix (same as how child meshes are transformed)
+    const controlCenterPos = new THREE.Vector3().copy(controlCenterLocal).applyMatrix4(controlBarWorldMatrix)
+    const controlLeftPos = new THREE.Vector3().copy(controlLeftLocal).applyMatrix4(controlBarWorldMatrix)
+    const controlRightPos = new THREE.Vector3().copy(controlRightLocal).applyMatrix4(controlBarWorldMatrix)
+    const controlFrontPos = new THREE.Vector3().copy(controlFrontLocal).applyMatrix4(controlBarWorldMatrix)
+    const controlBackPos = new THREE.Vector3().copy(controlBackLocal).applyMatrix4(controlBarWorldMatrix)
     
     // Store positions for debug spheres to use
     controlBarPositionsRef.current = {
