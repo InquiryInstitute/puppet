@@ -1,0 +1,52 @@
+.string-positions-display {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  font-family: 'monospace', sans-serif;
+  font-size: 0.75em;
+  z-index: 1000;
+  max-width: 90vw;
+  overflow-x: auto;
+}
+
+.positions-table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 800px;
+}
+
+.positions-table th,
+.positions-table td {
+  padding: 4px 8px;
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.row-header {
+  font-weight: bold;
+  color: #a0aec0;
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.column-header {
+  font-weight: bold;
+  color: #a0aec0;
+  background-color: rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+
+.row-label {
+  font-weight: bold;
+  color: #e2e8f0;
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.position-cell {
+  color: #cbd5e0;
+  font-size: 0.9em;
+  white-space: nowrap;
+}

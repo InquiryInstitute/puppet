@@ -4,7 +4,25 @@ import { OrbitControls, PerspectiveCamera } from '@react-three/drei'
 import PuppetScene from './components/PuppetScene'
 import ControlBarDisplay from './components/ControlBarDisplay'
 import CameraTracker from './components/CameraTracker'
+import StringPositionsDisplay from './components/StringPositionsDisplay'
 import './App.css'
+
+interface StringPosition {
+  x: number
+  y: number
+  z: number
+}
+
+interface StringPositions {
+  head?: StringPosition
+  chest?: StringPosition
+  leftHand?: StringPosition
+  rightHand?: StringPosition
+  leftShoulder?: StringPosition
+  rightShoulder?: StringPosition
+  leftFoot?: StringPosition
+  rightFoot?: StringPosition
+}
 
 function App() {
   const [controlBarState, setControlBarState] = useState({
@@ -17,6 +35,13 @@ function App() {
     rotation: { roll: number; pitch: number; yaw: number }
   } | null>(null)
 
+  const [stringPositions, setStringPositions] = useState<{
+    controller?: StringPositions
+    stringStart?: StringPositions
+    stringEnd?: StringPositions
+    puppet?: StringPositions
+  }>({})
+
   return (
     <div className="app">
       <ControlBarDisplay 
@@ -24,6 +49,12 @@ function App() {
         controlBarRotation={controlBarState.rotation}
         cameraPosition={cameraState?.position}
         cameraRotation={cameraState?.rotation}
+      />
+      <StringPositionsDisplay
+        controllerPositions={stringPositions.controller}
+        stringStartPositions={stringPositions.stringStart}
+        stringEndPositions={stringPositions.stringEnd}
+        puppetPositions={stringPositions.puppet}
       />
       <div className="canvas-container">
         <Canvas shadows>
@@ -44,6 +75,12 @@ function App() {
             command="" 
             isExecuting={false}
             onControlBarStateChange={(pos, rot) => setControlBarState({ position: pos, rotation: rot })}
+            onStringPositionsChange={(positions) => setStringPositions({
+              controller: positions.controller,
+              stringStart: positions.stringStart,
+              stringEnd: positions.stringEnd,
+              puppet: positions.puppet
+            })}
           />
           <CameraTracker 
             onCameraStateChange={(pos, rot) => setCameraState({ position: pos, rotation: rot })}

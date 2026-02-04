@@ -9,13 +9,36 @@ import { useLLMController } from '../llm/useLLMController'
 import { createWoodTexture } from '../utils/woodTexture'
 import { createCurtainTexture } from '../utils/curtainTexture'
 
+interface StringPosition {
+  x: number
+  y: number
+  z: number
+}
+
+interface StringPositions {
+  head?: StringPosition
+  chest?: StringPosition
+  leftHand?: StringPosition
+  rightHand?: StringPosition
+  leftShoulder?: StringPosition
+  rightShoulder?: StringPosition
+  leftFoot?: StringPosition
+  rightFoot?: StringPosition
+}
+
 interface PuppetSceneProps {
   command: string
   isExecuting: boolean
   onControlBarStateChange?: (position: { x: number; y: number; z: number }, rotation: { roll: number; pitch: number; yaw: number }) => void
+  onStringPositionsChange?: (positions: {
+    controller: StringPositions
+    stringStart: StringPositions
+    stringEnd: StringPositions
+    puppet: StringPositions
+  }) => void
 }
 
-export default function PuppetScene({ command, onControlBarStateChange }: PuppetSceneProps) {
+export default function PuppetScene({ command, onControlBarStateChange, onStringPositionsChange }: PuppetSceneProps) {
   const { model, scene, step } = useMuJoCo()
   const { executeCommand, currentSequence, isProcessing } = useLLMController()
   const puppetRef = useRef<THREE.Group>(null)
@@ -167,6 +190,7 @@ export default function PuppetScene({ command, onControlBarStateChange }: Puppet
           stringControls={stringControls}
           controlBarRef={controlBarRef}
           onStringPull={handleStringPull}
+          onPositionsChange={onStringPositionsChange}
         />
       </group>
     </>

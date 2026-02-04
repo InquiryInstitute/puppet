@@ -3,6 +3,23 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { Line } from '@react-three/drei'
 import * as THREE from 'three'
 
+interface StringPosition {
+  x: number
+  y: number
+  z: number
+}
+
+interface StringPositions {
+  head?: StringPosition
+  chest?: StringPosition
+  leftHand?: StringPosition
+  rightHand?: StringPosition
+  leftShoulder?: StringPosition
+  rightShoulder?: StringPosition
+  leftFoot?: StringPosition
+  rightFoot?: StringPosition
+}
+
 interface MarionetteStringsProps {
   puppetRef: React.RefObject<THREE.Group>
   controlBarRef?: React.RefObject<THREE.Group>
@@ -16,6 +33,12 @@ interface MarionetteStringsProps {
   }
   puppetPosition?: [number, number, number]
   onStringPull?: (stringName: string, pullAmount: number) => void
+  onPositionsChange?: (positions: {
+    controller: StringPositions
+    stringStart: StringPositions
+    stringEnd: StringPositions
+    puppet: StringPositions
+  }) => void
   // Optional refs to actual body parts for precise attachment points
   headRef?: React.RefObject<THREE.Group>
   leftForearmRef?: React.RefObject<THREE.Group>
@@ -30,6 +53,7 @@ export default function MarionetteStrings({
   stringControls: _stringControls = {}, // Kept for interface compatibility but not used in length calculation
   puppetPosition = [0, 1, 0],
   onStringPull,
+  onPositionsChange,
   headRef,
   leftForearmRef,
   rightForearmRef,
@@ -180,28 +204,6 @@ export default function MarionetteStrings({
       front: controlFrontPos.clone(),
       back: controlBackPos.clone(),
     }
-    
-    // Log coordinates for debugging (every 60 frames to avoid spam)
-    if (stringsRef.current && Math.floor(Date.now() / 100) % 6 === 0) {
-      console.log('=== String Coordinates Debug ===')
-      console.log('Control Bar Positions:', {
-        center: { x: controlCenterPos.x.toFixed(3), y: controlCenterPos.y.toFixed(3), z: controlCenterPos.z.toFixed(3) },
-        left: { x: controlLeftPos.x.toFixed(3), y: controlLeftPos.y.toFixed(3), z: controlLeftPos.z.toFixed(3) },
-        right: { x: controlRightPos.x.toFixed(3), y: controlRightPos.y.toFixed(3), z: controlRightPos.z.toFixed(3) },
-        front: { x: controlFrontPos.x.toFixed(3), y: controlFrontPos.y.toFixed(3), z: controlFrontPos.z.toFixed(3) },
-        back: { x: controlBackPos.x.toFixed(3), y: controlBackPos.y.toFixed(3), z: controlBackPos.z.toFixed(3) },
-      })
-      console.log('Puppet Positions:', {
-        head: { x: puppetHeadPos.x.toFixed(3), y: puppetHeadPos.y.toFixed(3), z: puppetHeadPos.z.toFixed(3) },
-        chest: { x: puppetChestPos.x.toFixed(3), y: puppetChestPos.y.toFixed(3), z: puppetChestPos.z.toFixed(3) },
-        leftHand: { x: puppetLeftHandPos.x.toFixed(3), y: puppetLeftHandPos.y.toFixed(3), z: puppetLeftHandPos.z.toFixed(3) },
-        rightHand: { x: puppetRightHandPos.x.toFixed(3), y: puppetRightHandPos.y.toFixed(3), z: puppetRightHandPos.z.toFixed(3) },
-        leftShoulder: { x: puppetLeftShoulderPos.x.toFixed(3), y: puppetLeftShoulderPos.y.toFixed(3), z: puppetLeftShoulderPos.z.toFixed(3) },
-        rightShoulder: { x: puppetRightShoulderPos.x.toFixed(3), y: puppetRightShoulderPos.y.toFixed(3), z: puppetRightShoulderPos.z.toFixed(3) },
-        leftFoot: { x: puppetLeftFootPos.x.toFixed(3), y: puppetLeftFootPos.y.toFixed(3), z: puppetLeftFootPos.z.toFixed(3) },
-        rightFoot: { x: puppetRightFootPos.x.toFixed(3), y: puppetRightFootPos.y.toFixed(3), z: puppetRightFootPos.z.toFixed(3) },
-      })
-    }
 
     // All 8 strings from MuJoCo model - connect directly to control bar attachment points
     // Use the directly calculated positions (same values stored in refs, but fresh from this frame)
@@ -264,15 +266,49 @@ export default function MarionetteStrings({
       },
     ]
     
-    // Log string coordinates for debugging (every 60 frames to avoid spam)
-    if (stringsRef.current && Math.floor(Date.now() / 100) % 6 === 0) {
-      console.log('=== String Start/End Coordinates ===')
-      stringConfigs.forEach(config => {
-        console.log(`${config.name}:`, {
-          start: { x: config.start.x.toFixed(3), y: config.start.y.toFixed(3), z: config.start.z.toFixed(3) },
-          end: { x: config.end.x.toFixed(3), y: config.end.y.toFixed(3), z: config.end.z.toFixed(3) },
-          distance: config.start.distanceTo(config.end).toFixed(3),
-        })
+    // Report positions to parent component for display
+    if (onPositionsChange && stringsRef.current) {
+      onPositionsChange({
+        controller: {
+          head: { x: controlCenterPos.x, y: controlCenterPos.y, z: controlCenterPos.z },
+          chest: { x: controlCenterPos.x, y: controlCenterPos.y, z: controlCenterPos.z },
+          leftHand: { x: controlLeftPos.x, y: controlLeftPos.y, z: controlLeftPos.z },
+          rightHand: { x: controlRightPos.x, y: controlRightPos.y, z: controlRightPos.z },
+          leftShoulder: { x: controlFrontPos.x, y: controlFrontPos.y, z: controlFrontPos.z },
+          rightShoulder: { x: controlBackPos.x, y: controlBackPos.y, z: controlBackPos.z },
+          leftFoot: { x: controlFrontPos.x, y: controlFrontPos.y, z: controlFrontPos.z },
+          rightFoot: { x: controlBackPos.x, y: controlBackPos.y, z: controlBackPos.z },
+        },
+        stringStart: {
+          head: { x: puppetHeadPos.x, y: puppetHeadPos.y, z: puppetHeadPos.z },
+          chest: { x: puppetChestPos.x, y: puppetChestPos.y, z: puppetChestPos.z },
+          leftHand: { x: puppetLeftHandPos.x, y: puppetLeftHandPos.y, z: puppetLeftHandPos.z },
+          rightHand: { x: puppetRightHandPos.x, y: puppetRightHandPos.y, z: puppetRightHandPos.z },
+          leftShoulder: { x: puppetLeftShoulderPos.x, y: puppetLeftShoulderPos.y, z: puppetLeftShoulderPos.z },
+          rightShoulder: { x: puppetRightShoulderPos.x, y: puppetRightShoulderPos.y, z: puppetRightShoulderPos.z },
+          leftFoot: { x: puppetLeftFootPos.x, y: puppetLeftFootPos.y, z: puppetLeftFootPos.z },
+          rightFoot: { x: puppetRightFootPos.x, y: puppetRightFootPos.y, z: puppetRightFootPos.z },
+        },
+        stringEnd: {
+          head: { x: controlCenterPos.x, y: controlCenterPos.y, z: controlCenterPos.z },
+          chest: { x: controlCenterPos.x, y: controlCenterPos.y, z: controlCenterPos.z },
+          leftHand: { x: controlLeftPos.x, y: controlLeftPos.y, z: controlLeftPos.z },
+          rightHand: { x: controlRightPos.x, y: controlRightPos.y, z: controlRightPos.z },
+          leftShoulder: { x: controlFrontPos.x, y: controlFrontPos.y, z: controlFrontPos.z },
+          rightShoulder: { x: controlBackPos.x, y: controlBackPos.y, z: controlBackPos.z },
+          leftFoot: { x: controlFrontPos.x, y: controlFrontPos.y, z: controlFrontPos.z },
+          rightFoot: { x: controlBackPos.x, y: controlBackPos.y, z: controlBackPos.z },
+        },
+        puppet: {
+          head: { x: puppetHeadPos.x, y: puppetHeadPos.y, z: puppetHeadPos.z },
+          chest: { x: puppetChestPos.x, y: puppetChestPos.y, z: puppetChestPos.z },
+          leftHand: { x: puppetLeftHandPos.x, y: puppetLeftHandPos.y, z: puppetLeftHandPos.z },
+          rightHand: { x: puppetRightHandPos.x, y: puppetRightHandPos.y, z: puppetRightHandPos.z },
+          leftShoulder: { x: puppetLeftShoulderPos.x, y: puppetLeftShoulderPos.y, z: puppetLeftShoulderPos.z },
+          rightShoulder: { x: puppetRightShoulderPos.x, y: puppetRightShoulderPos.y, z: puppetRightShoulderPos.z },
+          leftFoot: { x: puppetLeftFootPos.x, y: puppetLeftFootPos.y, z: puppetLeftFootPos.z },
+          rightFoot: { x: puppetRightFootPos.x, y: puppetRightFootPos.y, z: puppetRightFootPos.z },
+        },
       })
     }
 

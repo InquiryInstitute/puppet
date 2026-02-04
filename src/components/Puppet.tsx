@@ -3,6 +3,23 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import MarionetteStrings from './MarionetteStrings'
 
+interface StringPosition {
+  x: number
+  y: number
+  z: number
+}
+
+interface StringPositions {
+  head?: StringPosition
+  chest?: StringPosition
+  leftHand?: StringPosition
+  rightHand?: StringPosition
+  leftShoulder?: StringPosition
+  rightShoulder?: StringPosition
+  leftFoot?: StringPosition
+  rightFoot?: StringPosition
+}
+
 interface PuppetProps {
   stringControls?: {
     head?: number
@@ -14,9 +31,15 @@ interface PuppetProps {
   }
   controlBarRef?: React.RefObject<THREE.Group>
   onStringPull?: (stringName: string, pullAmount: number) => void
+  onPositionsChange?: (positions: {
+    controller: StringPositions
+    stringStart: StringPositions
+    stringEnd: StringPositions
+    puppet: StringPositions
+  }) => void
 }
 
-export default function Puppet({ stringControls, controlBarRef, onStringPull }: PuppetProps) {
+export default function Puppet({ stringControls, controlBarRef, onStringPull, onPositionsChange }: PuppetProps) {
   const groupRef = useRef<THREE.Group>(null)
   const headRef = useRef<THREE.Group>(null)
   const torsoRef = useRef<THREE.Group>(null)
@@ -290,6 +313,7 @@ export default function Puppet({ stringControls, controlBarRef, onStringPull }: 
         stringControls={stringControls}
         puppetPosition={[0, 0.625, 0]}
         onStringPull={onStringPull}
+        onPositionsChange={onPositionsChange}
         headRef={headRef}
         leftForearmRef={leftForearmRef}
         rightForearmRef={rightForearmRef}
