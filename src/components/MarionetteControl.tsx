@@ -226,19 +226,20 @@ export default function MarionetteControl({
       
       const controls: any = {
         head: Math.max(0, Math.min(1, verticalPull + rotX * 0.3)),
-        // Fix: Invert the horizontal offset signs - when control bar moves left, left arm should be pulled
-        leftHand: Math.max(0, Math.min(1, verticalPull - rotZ * 0.3 + horizontalOffset * 0.5)),
-        rightHand: Math.max(0, Math.min(1, verticalPull + rotZ * 0.3 - horizontalOffset * 0.5)),
+        // Fix: Swap the horizontal offset - when control bar moves left (negative X), left arm should be pulled more
+        // When control bar moves right (positive X), right arm should be pulled more
+        leftHand: Math.max(0, Math.min(1, verticalPull - rotZ * 0.3 - horizontalOffset * 0.5)),
+        rightHand: Math.max(0, Math.min(1, verticalPull + rotZ * 0.3 + horizontalOffset * 0.5)),
       }
 
       if (stringCount >= 4) {
         controls.torso = Math.max(0, Math.min(1, verticalPull))
       }
       if (stringCount >= 5) {
-        controls.leftFoot = Math.max(0, Math.min(1, verticalPull - rotX * 0.2 + horizontalOffset * 0.3))
+        controls.leftFoot = Math.max(0, Math.min(1, verticalPull - rotX * 0.2 - horizontalOffset * 0.3))
       }
       if (stringCount >= 6) {
-        controls.rightFoot = Math.max(0, Math.min(1, verticalPull - rotX * 0.2 - horizontalOffset * 0.3))
+        controls.rightFoot = Math.max(0, Math.min(1, verticalPull - rotX * 0.2 + horizontalOffset * 0.3))
       }
 
       onStringControlsChange(controls)
