@@ -8,19 +8,24 @@ export function useLLMController() {
   const [error, setError] = useState<string | null>(null)
 
   const executeCommand = useCallback(async (command: string) => {
+    console.log('[useLLMController] executeCommand called with:', command)
     setIsProcessing(true)
     setError(null)
 
     try {
       // Generate motion sequence from LLM
+      console.log('[useLLMController] Calling generateMotionSequence...')
       const sequence = await generateMotionSequence(command)
+      console.log('[useLLMController] Generated sequence:', sequence)
       setCurrentSequence(sequence)
+      console.log('[useLLMController] Sequence set in state')
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to execute command'
       setError(errorMessage)
-      console.error('LLM command execution error:', err)
+      console.error('[useLLMController] Error:', err)
     } finally {
       setIsProcessing(false)
+      console.log('[useLLMController] Processing complete')
     }
   }, [])
 

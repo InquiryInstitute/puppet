@@ -7,13 +7,11 @@ import './App.css'
 
 function App() {
   const [command, setCommand] = useState('')
-  const [isExecuting, setIsExecuting] = useState(false)
+  const [isExecuting] = useState(false) // Managed by PuppetScene
 
   const handleCommand = async (cmd: string) => {
-    setIsExecuting(true)
     setCommand(cmd)
-    // Command will be processed by PuppetScene
-    setTimeout(() => setIsExecuting(false), 1000)
+    // isExecuting will be managed by PuppetScene via useLLMController
   }
 
   return (

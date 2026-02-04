@@ -57,6 +57,7 @@ async function callLLM(prompt: string): Promise<string> {
 }
 
 export async function generateMotionSequence(command: string): Promise<MotionSequence> {
+  console.log('[motionGenerator] generateMotionSequence called with:', command)
   // Call LLM to generate motion sequence
   const llmResponse = await callLLM(
     `Generate a motion sequence for a marionette puppet to: ${command}. ` +
@@ -64,9 +65,11 @@ export async function generateMotionSequence(command: string): Promise<MotionSeq
     `Each step should have: part (head, torso, leftArm, rightArm, leftLeg, rightLeg), ` +
     `rotation (object with x, y, z in radians), and duration (seconds).`
   )
+  console.log('[motionGenerator] LLM response:', llmResponse)
 
   try {
     const parsed = JSON.parse(llmResponse)
+    console.log('[motionGenerator] Parsed response:', parsed)
     const steps: MotionStep[] = []
     let currentTime = 0
 

@@ -10,18 +10,21 @@ interface PuppetSceneProps {
   isExecuting: boolean
 }
 
-export default function PuppetScene({ command, isExecuting }: PuppetSceneProps) {
+export default function PuppetScene({ command }: PuppetSceneProps) {
   const { model, scene, step } = useMuJoCo()
-  const { executeCommand, currentSequence } = useLLMController()
+  const { executeCommand, currentSequence, isProcessing } = useLLMController()
   const puppetRef = useRef<THREE.Group>(null)
   const [sequenceStartTime, setSequenceStartTime] = useState<number | null>(null)
+  const lastCommandRef = useRef<string>('')
 
   // Execute command when it changes
   useEffect(() => {
-    if (command && !isExecuting) {
+    if (command && command !== lastCommandRef.current && !isProcessing) {
+      lastCommandRef.current = command
+      console.log('PuppetScene: Executing command', command)
       executeCommand(command)
     }
-  }, [command, isExecuting, executeCommand])
+  }, [command, isProcessing, executeCommand])
 
   // Reset sequence start time when a new sequence arrives
   useEffect(() => {

@@ -31,6 +31,11 @@ export default function Puppet({ sequence, sequenceStartTime }: PuppetProps) {
       (s) => elapsed >= s.startTime && elapsed < s.startTime + s.duration
     )
 
+    if (step && state.clock.elapsedTime % 1 < 0.1) {
+      // Log every second for debugging
+      console.log('[Puppet] Applying step:', step, 'elapsed:', elapsed.toFixed(2))
+    }
+
     if (step) {
       // Apply rotations to body parts based on step
       if (headRef.current && step.rotations.head) {
