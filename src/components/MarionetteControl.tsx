@@ -47,9 +47,8 @@ export default function MarionetteControl({
   // Also sync in useFrame to handle updates (runs every frame)
   useFrame(() => {
     if (externalControlBarRef && controlRef.current) {
-      if (externalControlBarRef.current !== controlRef.current) {
-        (externalControlBarRef as React.MutableRefObject<THREE.Group | null>).current = controlRef.current
-      }
+      // Always keep the external ref in sync
+      (externalControlBarRef as React.MutableRefObject<THREE.Group | null>).current = controlRef.current
     }
   })
   const { camera, gl } = useThree()
@@ -278,8 +277,8 @@ export default function MarionetteControl({
         />
       </mesh>
       
-      {/* Front (left shoulder and left foot) */}
-      <mesh position={[0, 0.06, 0]} castShadow>
+      {/* Front (left shoulder and left foot) - along Z axis (forward) */}
+      <mesh position={[0, 0, 0.06]} castShadow>
         <sphereGeometry args={[0.012, 8, 8]} />
         <meshStandardMaterial 
           color="#d4af37" 
@@ -289,8 +288,8 @@ export default function MarionetteControl({
         />
       </mesh>
       
-      {/* Back (right shoulder and right foot) */}
-      <mesh position={[0, -0.06, 0]} castShadow>
+      {/* Back (right shoulder and right foot) - along Z axis (backward) */}
+      <mesh position={[0, 0, -0.06]} castShadow>
         <sphereGeometry args={[0.012, 8, 8]} />
         <meshStandardMaterial 
           color="#d4af37" 

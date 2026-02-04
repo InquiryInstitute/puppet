@@ -90,16 +90,17 @@ export default function MarionetteStrings({
     const puppetRightFootPos = puppetRightFootLocal.clone().applyQuaternion(puppetWorldQuat).add(puppetWorldPos)
 
     // Control bar attachment points (matching smaller crossbar)
+    // Coordinate system: X=left/right, Y=up/down, Z=forward/back
     // h_center for head and chest - on the stem below crossbar
     const controlCenterLocal = new THREE.Vector3(0, 0, -0.20)
     // h_left for left hand - left end of crossbar (now smaller: -0.12)
     const controlLeftLocal = new THREE.Vector3(-0.12, 0, 0)
     // h_right for right hand - right end of crossbar (now smaller: 0.12)
     const controlRightLocal = new THREE.Vector3(0.12, 0, 0)
-    // h_front for left shoulder and left foot - front of crossbar (+Y)
-    const controlFrontLocal = new THREE.Vector3(0, 0.06, 0)
-    // h_back for right shoulder and right foot - back of crossbar (-Y)
-    const controlBackLocal = new THREE.Vector3(0, -0.06, 0)
+    // h_front for left shoulder and left foot - front of crossbar (+Z, toward camera)
+    const controlFrontLocal = new THREE.Vector3(0, 0, 0.06)
+    // h_back for right shoulder and right foot - back of crossbar (-Z, away from camera)
+    const controlBackLocal = new THREE.Vector3(0, 0, -0.06)
 
     // Transform to world space
     const controlCenterPos = controlCenterLocal.clone().applyQuaternion(controlBarWorldQuat).add(controlBarWorldPos)
