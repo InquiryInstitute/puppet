@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import Puppet from './Puppet'
+import MarionetteControl from './MarionetteControl'
 import { useMuJoCo } from '../mujoco/useMuJoCo'
 import { useLLMController } from '../llm/useLLMController'
 
@@ -16,7 +17,7 @@ export default function PuppetScene({ command }: PuppetSceneProps) {
   const puppetRef = useRef<THREE.Group>(null)
   const controlBarRef = useRef<THREE.Group>(null)
   const [sequenceStartTime, setSequenceStartTime] = useState<number | null>(null)
-  const [stringControls] = useState<{
+  const [stringControls, setStringControls] = useState<{
     head: number
     leftHand: number
     rightHand: number
@@ -62,12 +63,13 @@ export default function PuppetScene({ command }: PuppetSceneProps) {
 
   return (
     <group ref={puppetRef}>
-      {/* Simple control bar (just a visual reference for strings) */}
-      <group ref={controlBarRef} position={[0, 1.5, 0]}>
-        <mesh>
-          <cylinderGeometry args={[0.03, 0.03, 0.4, 8]} />
-          <meshStandardMaterial color="#8b4513" />
-        </mesh>
+      {/* Interactive marionette control crossbar */}
+      <group ref={controlBarRef}>
+        <MarionetteControl
+          position={[0, 1.5, 0]}
+          onStringControlsChange={setStringControls}
+          stringCount={8}
+        />
       </group>
       
       {/* Puppet */}
