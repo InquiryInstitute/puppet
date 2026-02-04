@@ -47,8 +47,8 @@ export default function PuppetScene({ command, isExecuting }: PuppetSceneProps) 
   return (
     <group ref={puppetRef}>
       <Puppet 
-        sequence={currentSequence} 
-        sequenceStartTime={sequenceStartTime}
+        sequence={currentSequence ?? undefined} 
+        sequenceStartTime={sequenceStartTime ?? undefined}
       />
     </group>
   )
