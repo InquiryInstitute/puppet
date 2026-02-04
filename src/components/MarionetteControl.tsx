@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react'
-import { useFrame, useThree } from '@react-three/fiber'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
 interface MarionetteControlProps {
@@ -51,88 +51,96 @@ export default function MarionetteControl({
       (externalControlBarRef as React.MutableRefObject<THREE.Group | null>).current = controlRef.current
     }
   })
-  const { camera, gl } = useThree()
-  const [isDragging, setIsDragging] = useState(false)
   const [controlPosition, setControlPosition] = useState(() => new THREE.Vector3(...position))
   const [controlRotation, setControlRotation] = useState(() => new THREE.Euler(0, 0, 0))
+  const pressedKeysRef = useRef(new Set<string>())
   
-  // Track previous pointer position for delta calculation
-  const previousPointRef = useRef<THREE.Vector3>(new THREE.Vector3())
-  const dragPlaneRef = useRef<THREE.Plane>(new THREE.Plane(new THREE.Vector3(0, 0, 1), 0))
-
-  // Handle pointer down to start dragging
-  const handlePointerDown = (e: any) => {
-    // Don't drag if Option/Cmd is held (let camera controls work)
-    if (e.altKey || e.metaKey) {
-      return
+  // Keyboard controls for control bar
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent default for arrow keys to avoid page scrolling
+      if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+        e.preventDefault()
+      }
+      pressedKeysRef.current.add(e.key)
     }
     
-    e.stopPropagation()
-    e.nativeEvent.stopPropagation()
-    setIsDragging(true)
-    
-    // Store initial intersection point
-    previousPointRef.current.copy(e.point)
-    
-    // Create a plane perpendicular to camera for dragging
-    const cameraDirection = new THREE.Vector3()
-    camera.getWorldDirection(cameraDirection)
-    dragPlaneRef.current.setFromNormalAndCoplanarPoint(
-      cameraDirection,
-      e.point
-    )
-    
-    gl.domElement.style.cursor = 'grabbing'
-    ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
-  }
-
-  // Handle pointer move for dragging (called on the mesh)
-  const handlePointerMove = (e: any) => {
-    if (!isDragging || !controlRef.current) return
-    // Don't drag if Option/Cmd is held (let camera controls work)
-    if (e.altKey || e.metaKey) {
-      setIsDragging(false)
-      return
-    }
-    e.stopPropagation()
-    e.nativeEvent.stopPropagation()
-    
-    // Use the intersection point from the event
-    const delta = new THREE.Vector3().subVectors(e.point, previousPointRef.current)
-    
-    // Update position (left/right, up/down)
-    if (!e.shiftKey) {
-      setControlPosition(prev => {
-        const newPos = prev.clone()
-        newPos.add(delta)
-        return newPos
-      })
-    } else {
-      // Shift key: rotate instead of translate
-      setControlRotation(prev => {
-        const newRot = prev.clone()
-        // Tilt forward/backward (rotate around X axis based on Y movement)
-        newRot.x += delta.y * 2
-        // Tilt sideways (rotate around Z axis based on X movement)
-        newRot.z += delta.x * 2
-        // Clamp rotations
-        newRot.x = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, newRot.x))
-        newRot.z = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, newRot.z))
-        return newRot
-      })
+    const handleKeyUp = (e: KeyboardEvent) => {
+      pressedKeysRef.current.delete(e.key)
     }
     
-    previousPointRef.current.copy(e.point)
-  }
-
-  // Handle pointer up to stop dragging
-  const handlePointerUp = (e: any) => {
-    setIsDragging(false)
-    gl.domElement.style.cursor = 'grab'
-    if (e.target) {
-      (e.target as HTMLElement).releasePointerCapture(e.pointerId)
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
     }
-  }
+  }, [])
+  
+  // Update control bar position/rotation based on pressed keys (in useFrame)
+  useFrame((_, delta) => {
+    const MOVE_SPEED = 2.0 // Units per second
+    const ROTATE_SPEED = 1.0 // Radians per second
+    const pressedKeys = pressedKeysRef.current
+    
+    setControlPosition(prev => {
+      const newPos = prev.clone()
+      
+      // Arrow keys: translate Left/Right/Up/Down
+      if (pressedKeys.has('ArrowLeft')) {
+        newPos.x -= MOVE_SPEED * delta
+      }
+      if (pressedKeys.has('ArrowRight')) {
+        newPos.x += MOVE_SPEED * delta
+      }
+      if (pressedKeys.has('ArrowUp') && !pressedKeys.has('Control')) {
+        newPos.y += MOVE_SPEED * delta
+      }
+      if (pressedKeys.has('ArrowDown') && !pressedKeys.has('Control')) {
+        newPos.y -= MOVE_SPEED * delta
+      }
+      
+      // Ctrl + Up/Down: move in Z (forward/back)
+      if (pressedKeys.has('Control')) {
+        if (pressedKeys.has('ArrowUp')) {
+          newPos.z += MOVE_SPEED * delta
+        }
+        if (pressedKeys.has('ArrowDown')) {
+          newPos.z -= MOVE_SPEED * delta
+        }
+      }
+      
+      return newPos
+    })
+    
+    setControlRotation(prev => {
+      const newRot = prev.clone()
+      
+      // Shift + Left/Right: tilt left/right (rotate around Z)
+      if (pressedKeys.has('Shift')) {
+        if (pressedKeys.has('ArrowLeft')) {
+          newRot.z += ROTATE_SPEED * delta
+        }
+        if (pressedKeys.has('ArrowRight')) {
+          newRot.z -= ROTATE_SPEED * delta
+        }
+        // Shift + Up/Down: tilt up/down (rotate around X)
+        if (pressedKeys.has('ArrowUp') && !pressedKeys.has('Control')) {
+          newRot.x += ROTATE_SPEED * delta
+        }
+        if (pressedKeys.has('ArrowDown') && !pressedKeys.has('Control')) {
+          newRot.x -= ROTATE_SPEED * delta
+        }
+      }
+      
+      // Clamp rotations
+      newRot.x = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, newRot.x))
+      newRot.z = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, newRot.z))
+      
+      return newRot
+    })
+  })
 
   // Update control bar transform
   useFrame((state) => {
@@ -211,10 +219,6 @@ export default function MarionetteControl({
       {/* Crossbar (horizontal bar) - smaller */}
       <mesh
         position={[0, 0, 0]}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
         castShadow
       >
         <cylinderGeometry args={[0.008, 0.008, 0.24, 8]} />
@@ -228,10 +232,6 @@ export default function MarionetteControl({
       {/* Stem (vertical handle) - smaller to match crossbar */}
       <mesh
         position={[0, 0, -0.10]}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
         rotation={[Math.PI / 2, 0, 0]}
         castShadow
       >
@@ -299,17 +299,6 @@ export default function MarionetteControl({
         />
       </mesh>
       
-      {/* Extended invisible hitbox for easier dragging */}
-      <mesh
-        position={[0, 0, 0]}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
-        visible={false}
-      >
-        <boxGeometry args={[0.5, 0.3, 0.5]} />
-      </mesh>
     </group>
   )
 }
