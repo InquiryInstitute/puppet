@@ -23,10 +23,13 @@ function RedirectHandler() {
       if (!path.startsWith('/')) {
         path = '/' + path
       }
-      // Navigate to the correct path without reload
+      // Clear the query parameter and navigate
+      const newUrl = window.location.origin + path + window.location.hash
+      window.history.replaceState({}, '', newUrl)
+      // Force navigation
       navigate(path, { replace: true })
     }
-  }, [location, navigate])
+  }, [location.search, navigate]) // Only depend on search, not full location
 
   return null
 }
