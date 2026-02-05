@@ -108,16 +108,21 @@ export function applyStringForcesToJoints(
   const getWorldPosition = (localPos: THREE.Vector3): THREE.Vector3 => {
     return localPos.clone().applyQuaternion(baseQuat).add(puppetBasePosition)
   }
+  // Where the string attaches (force application point) = joint + offset. Torque = r × F needs r = attachment − joint (was same point → zero torque).
+  const getAttachmentWorld = (jointPos: THREE.Vector3, offset: THREE.Vector3): THREE.Vector3 =>
+    getWorldPosition(jointPos.clone().add(offset))
 
-  // Apply head string force to head
-  // Head is connected to torso, so this force will pull the torso (and whole puppet)
+  const OFF = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z)
+
+  // Apply head string force to head (attachment at top of head, pivot at neck)
   const headString = stringStates.get('head')
   if (headString) {
-    const headWorldPos = getWorldPosition(physicsState.head.position)
+    const jointWorld = getWorldPosition(physicsState.head.position)
+    const attachWorld = getAttachmentWorld(physicsState.head.position, OFF(0, 0.15, 0))
     const { force, torque } = convertStringForceToJointTorque(
       headString.force,
-      headWorldPos,
-      headWorldPos,
+      attachWorld,
+      jointWorld,
       physicsState.head.rotation
     )
     physicsState.head.force.add(force)
@@ -131,26 +136,27 @@ export function applyStringForcesToJoints(
   // Apply chest string force to torso
   const chestString = stringStates.get('chest')
   if (chestString) {
-    const torsoWorldPos = getWorldPosition(physicsState.torso.position)
+    const jointWorld = getWorldPosition(physicsState.torso.position)
+    const attachWorld = getAttachmentWorld(physicsState.torso.position, OFF(0, 0.2, 0))
     const { force, torque } = convertStringForceToJointTorque(
       chestString.force,
-      torsoWorldPos,
-      torsoWorldPos,
+      attachWorld,
+      jointWorld,
       physicsState.torso.rotation
     )
     physicsState.torso.force.add(force)
     physicsState.torso.torque.add(torque)
   }
 
-  // Apply left hand string force to left elbow (end of arm chain)
-  // Force propagates: elbow → shoulder → torso
+  // Apply left hand string force to left elbow
   const leftHandString = stringStates.get('leftHand')
   if (leftHandString) {
-    const leftElbowWorldPos = getWorldPosition(physicsState.leftElbow.position)
+    const jointWorld = getWorldPosition(physicsState.leftElbow.position)
+    const attachWorld = getAttachmentWorld(physicsState.leftElbow.position, OFF(-0.18, 0, 0))
     const { force, torque } = convertStringForceToJointTorque(
       leftHandString.force,
-      leftElbowWorldPos,
-      leftElbowWorldPos,
+      attachWorld,
+      jointWorld,
       physicsState.leftElbow.rotation
     )
     physicsState.leftElbow.force.add(force)
@@ -163,14 +169,14 @@ export function applyStringForcesToJoints(
   }
 
   // Apply right hand string force to right elbow
-  // Force propagates: elbow → shoulder → torso
   const rightHandString = stringStates.get('rightHand')
   if (rightHandString) {
-    const rightElbowWorldPos = getWorldPosition(physicsState.rightElbow.position)
+    const jointWorld = getWorldPosition(physicsState.rightElbow.position)
+    const attachWorld = getAttachmentWorld(physicsState.rightElbow.position, OFF(0.18, 0, 0))
     const { force, torque } = convertStringForceToJointTorque(
       rightHandString.force,
-      rightElbowWorldPos,
-      rightElbowWorldPos,
+      attachWorld,
+      jointWorld,
       physicsState.rightElbow.rotation
     )
     physicsState.rightElbow.force.add(force)
@@ -182,15 +188,15 @@ export function applyStringForcesToJoints(
     physicsState.torso.force.add(force.clone().multiplyScalar(0.5))
   }
 
-  // Apply left shoulder string force
-  // Force propagates: shoulder → torso
+  // Apply left shoulder string force (string at shoulder; use small offset so torque is non-zero when force is diagonal)
   const leftShoulderString = stringStates.get('leftShoulder')
   if (leftShoulderString) {
-    const leftShoulderWorldPos = getWorldPosition(physicsState.leftShoulder.position)
+    const jointWorld = getWorldPosition(physicsState.leftShoulder.position)
+    const attachWorld = getAttachmentWorld(physicsState.leftShoulder.position, OFF(0, 0.05, 0))
     const { force, torque } = convertStringForceToJointTorque(
       leftShoulderString.force,
-      leftShoulderWorldPos,
-      leftShoulderWorldPos,
+      attachWorld,
+      jointWorld,
       physicsState.leftShoulder.rotation
     )
     physicsState.leftShoulder.force.add(force)
@@ -201,14 +207,14 @@ export function applyStringForcesToJoints(
   }
 
   // Apply right shoulder string force
-  // Force propagates: shoulder → torso
   const rightShoulderString = stringStates.get('rightShoulder')
   if (rightShoulderString) {
-    const rightShoulderWorldPos = getWorldPosition(physicsState.rightShoulder.position)
+    const jointWorld = getWorldPosition(physicsState.rightShoulder.position)
+    const attachWorld = getAttachmentWorld(physicsState.rightShoulder.position, OFF(0, 0.05, 0))
     const { force, torque } = convertStringForceToJointTorque(
       rightShoulderString.force,
-      rightShoulderWorldPos,
-      rightShoulderWorldPos,
+      attachWorld,
+      jointWorld,
       physicsState.rightShoulder.rotation
     )
     physicsState.rightShoulder.force.add(force)
@@ -218,14 +224,15 @@ export function applyStringForcesToJoints(
     physicsState.torso.force.add(force.clone().multiplyScalar(0.8))
   }
 
-  // Apply left foot string force to left knee
+  // Apply left foot string force to left knee (attachment at foot)
   const leftFootString = stringStates.get('leftFoot')
   if (leftFootString) {
-    const leftKneeWorldPos = getWorldPosition(physicsState.leftKnee.position)
+    const jointWorld = getWorldPosition(physicsState.leftKnee.position)
+    const attachWorld = getAttachmentWorld(physicsState.leftKnee.position, OFF(0, -0.2, 0.05))
     const { force, torque } = convertStringForceToJointTorque(
       leftFootString.force,
-      leftKneeWorldPos,
-      leftKneeWorldPos,
+      attachWorld,
+      jointWorld,
       physicsState.leftKnee.rotation
     )
     physicsState.leftKnee.force.add(force)
@@ -235,11 +242,12 @@ export function applyStringForcesToJoints(
   // Apply right foot string force to right knee
   const rightFootString = stringStates.get('rightFoot')
   if (rightFootString) {
-    const rightKneeWorldPos = getWorldPosition(physicsState.rightKnee.position)
+    const jointWorld = getWorldPosition(physicsState.rightKnee.position)
+    const attachWorld = getAttachmentWorld(physicsState.rightKnee.position, OFF(0, -0.2, 0.05))
     const { force, torque } = convertStringForceToJointTorque(
       rightFootString.force,
-      rightKneeWorldPos,
-      rightKneeWorldPos,
+      attachWorld,
+      jointWorld,
       physicsState.rightKnee.rotation
     )
     physicsState.rightKnee.force.add(force)

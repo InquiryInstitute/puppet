@@ -36,10 +36,11 @@ interface PuppetSceneProps {
     stringEnd: StringPositions
     puppet: StringPositions
   }) => void
+  onForcesTorquesChange?: (data: { forces: StringPositions; torques: StringPositions }) => void
   onStringLengthStateChange?: (selectedIndex: number | null, restLengths: Map<string, number>) => void
 }
 
-export default function PuppetScene({ command, onControlBarStateChange, onStringPositionsChange, onStringLengthStateChange }: PuppetSceneProps) {
+export default function PuppetScene({ command, onControlBarStateChange, onStringPositionsChange, onForcesTorquesChange, onStringLengthStateChange }: PuppetSceneProps) {
   const { model, scene, step } = useMuJoCo()
   const { executeCommand, currentSequence, isProcessing } = useLLMController()
   const puppetRef = useRef<THREE.Group>(null)
@@ -267,6 +268,7 @@ export default function PuppetScene({ command, onControlBarStateChange, onString
           controlBarRotation={controlBarState.rotation}
           onStringPull={handleStringPull}
           onPositionsChange={onStringPositionsChange}
+          onForcesTorquesChange={onForcesTorquesChange}
           stringRestLengths={stringRestLengths}
         />
       </group>

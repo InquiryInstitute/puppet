@@ -41,6 +41,10 @@ interface PuppetProps {
     stringEnd: StringPositions
     puppet: StringPositions
   }) => void
+  onForcesTorquesChange?: (data: {
+    forces: StringPositions
+    torques: StringPositions
+  }) => void
   stringRestLengths?: Map<string, number> // Optional overrides for string rest lengths
 }
 
@@ -51,6 +55,7 @@ export default function Puppet({
   controlBarRotation = { roll: 0, pitch: 0, yaw: 0 },
   onStringPull, 
   onPositionsChange,
+  onForcesTorquesChange,
   stringRestLengths
 }: PuppetProps) {
   const groupRef = useRef<THREE.Group>(null)
@@ -168,6 +173,34 @@ export default function Puppet({
         puppetBasePos,
         puppetBaseRot
       )
+
+      // Report force (per attachment) and torque (per joint, mapped to attachment) before step resets them
+      if (onForcesTorquesChange) {
+        const vec = (v: THREE.Vector3) => ({ x: v.x, y: v.y, z: v.z })
+        const ps = physicsStateRef.current
+        onForcesTorquesChange({
+          forces: {
+            head: vec(stringStates.get('head')?.force ?? new THREE.Vector3()),
+            chest: vec(stringStates.get('chest')?.force ?? new THREE.Vector3()),
+            leftHand: vec(stringStates.get('leftHand')?.force ?? new THREE.Vector3()),
+            rightHand: vec(stringStates.get('rightHand')?.force ?? new THREE.Vector3()),
+            leftShoulder: vec(stringStates.get('leftShoulder')?.force ?? new THREE.Vector3()),
+            rightShoulder: vec(stringStates.get('rightShoulder')?.force ?? new THREE.Vector3()),
+            leftFoot: vec(stringStates.get('leftFoot')?.force ?? new THREE.Vector3()),
+            rightFoot: vec(stringStates.get('rightFoot')?.force ?? new THREE.Vector3()),
+          },
+          torques: {
+            head: vec(ps.head.torque),
+            chest: vec(ps.torso.torque),
+            leftHand: vec(ps.leftElbow.torque),
+            rightHand: vec(ps.rightElbow.torque),
+            leftShoulder: vec(ps.leftShoulder.torque),
+            rightShoulder: vec(ps.rightShoulder.torque),
+            leftFoot: vec(ps.leftKnee.torque),
+            rightFoot: vec(ps.rightKnee.torque),
+          },
+        })
+      }
 
       // Apply torso force to puppet base position
       // The torso is the root, so all forces that propagate to it move the whole puppet

@@ -42,6 +42,11 @@ export default function Simulation() {
     puppet?: StringPositions
   }>({})
 
+  const [forcesTorques, setForcesTorques] = useState<{
+    forces?: StringPositions
+    torques?: StringPositions
+  }>({})
+
   return (
     <div className="app">
       <ControlBarDisplay 
@@ -55,6 +60,8 @@ export default function Simulation() {
         stringStartPositions={stringPositions.stringStart}
         stringEndPositions={stringPositions.stringEnd}
         puppetPositions={stringPositions.puppet}
+        forces={forcesTorques.forces}
+        torques={forcesTorques.torques}
       />
       <div className="canvas-container">
         <Canvas shadows>
@@ -81,6 +88,7 @@ export default function Simulation() {
               stringEnd: positions.stringEnd,
               puppet: positions.puppet
             })}
+            onForcesTorquesChange={(data) => setForcesTorques({ forces: data.forces, torques: data.torques })}
           />
           <CameraTracker 
             onCameraStateChange={(pos, rot) => setCameraState({ position: pos, rotation: rot })}
