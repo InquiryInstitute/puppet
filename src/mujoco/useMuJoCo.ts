@@ -31,9 +31,6 @@ const BODY_IDS: Record<string, number> = {
   r_shin: 12,
 }
 
-// Actuator order in XML: a_head, a_chest, a_l_hand, a_r_hand, a_l_sh, a_r_sh, a_l_foot, a_r_foot
-const ACTUATOR_NAMES = ['head', 'chest', 'leftHand', 'rightHand', 'leftShoulder', 'rightShoulder', 'leftFoot', 'rightFoot'] as const
-
 export interface MuJoCoBodyPose {
   position: THREE.Vector3
   quaternion: THREE.Quaternion
@@ -85,7 +82,7 @@ export function useMuJoCo(): UseMuJoCoReturn {
         const loadMujoco = (await import('mujoco-js')).default
         const mujoco = await loadMujoco()
         if (cancelled) return
-        mujocoRef.current = mujoco
+        mujocoRef.current = mujoco as typeof mujocoRef.current
 
         if (mujoco.FS) {
           mujoco.FS.mkdir('/working')
@@ -101,14 +98,12 @@ export function useMuJoCo(): UseMuJoCoReturn {
         if (cancelled) return
         modelRef.current = model
 
-        const data = new mujoco.MjData(model) as { qpos: Float32Array; ctrl?: Float32Array; xpos: Float32Array; xquat: Float32Array }
+        const data = new (mujoco as { MjData: new (m: unknown) => { qpos: Float32Array; ctrl?: Float32Array; xpos: Float32Array; xquat: Float32Array } }).MjData(model) as { qpos: Float32Array; ctrl?: Float32Array; xpos: Float32Array; xquat: Float32Array }
         if (cancelled) return
         dataRef.current = data
 
         if (mujoco.mj_resetData) {
-          mujoco.mj_resetData(model, data)
-        } else if (mujoco.MjResetData) {
-          mujoco.MjResetData(model, data)
+          mujoco.mj_resetData(model as never, data as never)
         }
 
         // Initial handle position (MuJoCo Z-up): e.g. 0, 0, 2.5

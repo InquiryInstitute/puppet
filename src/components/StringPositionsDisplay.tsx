@@ -44,8 +44,8 @@ const formatPosition = (pos: StringPosition | undefined): string => {
   return `${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}, ${pos.z.toFixed(2)}`
 }
 
-/** Convert scene coords (X right, Y up, Z forward) to MuJoCo world (X, Y horizontal, Z up). */
-function toMuJoCoCoords(pos: StringPosition | undefined): string => {
+/** Convert scene coords to MuJoCo world: Y-up vs Z-up. */
+function toMuJoCoCoords(pos: StringPosition | undefined): string {
   if (!pos) return 'N/A'
   const x_mj = pos.x
   const y_mj = pos.z
