@@ -39,6 +39,10 @@ struct ContentView: View {
                     bodyTracker.stopTracking()
                     showARView = false
                 }
+                // Auto-start motion when entering Controller mode so orientation updates immediately
+                if newMode == .controller {
+                    motionManager.start()
+                }
             }
             
             // BLE Advertising Status
@@ -71,9 +75,16 @@ struct ContentView: View {
                 mocapModeView
             }
             
+            // Helper text: sensors don't require BLE
+            if controlMode == .controller {
+                Text("Tap Start to enable sensors. BLE is optional for streaming.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
             Spacer()
             
-            // Control Button
+            // Control Button (Start = enable motion/ARKit; BLE is separate)
             Button(action: {
                 if controlMode == .controller {
                     if motionManager.isActive {
@@ -104,6 +115,12 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showARView) {
             ARViewContainer(bodyTracker: bodyTracker)
+        }
+        .onAppear {
+            // Auto-start motion in Controller mode so orientation/translation update immediately (no BLE required)
+            if controlMode == .controller && !motionManager.isActive {
+                motionManager.start()
+            }
         }
         .onChange(of: motionManager.roll) { _ in
             if controlMode == .controller && blePeripheral.isAdvertising {
@@ -148,6 +165,17 @@ struct ContentView: View {
     
     private var controllerModeView: some View {
         VStack(alignment: .leading, spacing: 10) {
+            // Motion active indicator
+            HStack {
+                Circle()
+                    .fill(motionManager.isActive ? Color.green : Color.gray)
+                    .frame(width: 8, height: 8)
+                Text(motionManager.isActive ? "Sensors active" : "Tap Start to enable sensors")
+                    .font(.subheadline)
+                    .foregroundColor(motionManager.isActive ? .primary : .secondary)
+            }
+            .padding(.bottom, 4)
+            
             Text("Orientation (Euler Angles)")
                 .font(.headline)
             
@@ -165,7 +193,7 @@ struct ContentView: View {
             }
             .font(.system(.body, design: .monospaced))
             
-            Text("Translation")
+            Text("Translation (user acceleration)")
                 .font(.headline)
                 .padding(.top)
             
