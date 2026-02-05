@@ -1,7 +1,9 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import './Splash.css'
 
 export default function Splash() {
+  const location = useLocation()
+  const base = location.pathname.startsWith('/puppet') ? '/puppet' : ''
   return (
     <div className="splash">
       <div className="splash-content">
@@ -57,7 +59,7 @@ export default function Splash() {
               View the live data stream and see how your movements translate to puppet control.
             </p>
             <a 
-              href="/telemetry.html" 
+              href={`${base}/telemetry.html`} 
               className="splash-button phone-link"
               target="_blank"
               rel="noopener noreferrer"

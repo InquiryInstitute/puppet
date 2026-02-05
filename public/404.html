@@ -12,10 +12,11 @@
       // to the new url with only a query string and hash fragment,
       // e.g. https://www.foo.tld/one/two?a=b&c=d#qwe, becomes
       // https://www.foo.tld/?/one/two&a=b~and~c=d#qwe
+      // When app is under a subpath (e.g. /puppet/), keep 1 segment so redirect is /puppet/?/sim not /?/puppet~slash~sim
       // Note: this 404.html file must be at least 512 bytes for it to work
       // in Internet Explorer (otherwise IE will show its default 404 page)
-
-      var pathSegmentsToKeep = 0;
+      var pathParts = window.location.pathname.split('/').filter(Boolean);
+      var pathSegmentsToKeep = pathParts.length > 1 ? 1 : 0;
 
       var l = window.location;
       var redirect = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
