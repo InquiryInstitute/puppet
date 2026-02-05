@@ -1,9 +1,27 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { copyFileSync, mkdirSync, existsSync } from 'fs'
+import { join } from 'path'
+
+// Copy index.html to route paths so /sim and /kleist are real files (no 404 → ?/path redirect)
+function copyHtmlToRoutes() {
+  return {
+    name: 'copy-html-to-routes',
+    closeBundle() {
+      const outDir = join(process.cwd(), 'dist')
+      const indexPath = join(outDir, 'index.html')
+      for (const route of ['sim', 'kleist']) {
+        const dir = join(outDir, route)
+        if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
+        copyFileSync(indexPath, join(dir, 'index.html'))
+      }
+    },
+  }
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), copyHtmlToRoutes()],
   // Base path: '/' for custom domain (puppet.inquiry.institute), '/puppet/' for GitHub Pages subdirectory
   base: process.env.CUSTOM_DOMAIN === 'true' ? '/' : (process.env.GITHUB_PAGES === 'true' ? '/puppet/' : '/'),
   server: {
