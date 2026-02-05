@@ -13,6 +13,7 @@ struct ContentView: View {
     @StateObject private var blePeripheral = BLEPeripheral()
     @State private var controlMode: ControlMode = .controller
     @State private var showARView: Bool = false
+    @State private var refreshTick: Int = 0
     
     var body: some View {
         VStack(spacing: 20) {
@@ -122,6 +123,12 @@ struct ContentView: View {
                 motionManager.start()
             }
         }
+        .onReceive(Timer.publish(every: 0.05, on: .main, in: .common).autoconnect()) { _ in
+            // Force view to refresh so orientation/translation numbers update on screen
+            if controlMode == .controller && motionManager.isActive {
+                refreshTick += 1
+            }
+        }
         .onChange(of: motionManager.roll) { _ in
             if controlMode == .controller && blePeripheral.isAdvertising {
                 updateBLEIMUData()
@@ -165,16 +172,23 @@ struct ContentView: View {
     
     private var controllerModeView: some View {
         VStack(alignment: .leading, spacing: 10) {
-            // Motion active indicator
-            HStack {
-                Circle()
-                    .fill(motionManager.isActive ? Color.green : Color.gray)
-                    .frame(width: 8, height: 8)
-                Text(motionManager.isActive ? "Sensors active" : "Tap Start to enable sensors")
-                    .font(.subheadline)
-                    .foregroundColor(motionManager.isActive ? .primary : .secondary)
+            // Motion active / error
+            if let error = motionManager.errorMessage {
+                Text(error)
+                    .font(.caption)
+                    .foregroundColor(.red)
+                    .padding(.bottom, 4)
+            } else {
+                HStack {
+                    Circle()
+                        .fill(motionManager.isActive ? Color.green : Color.gray)
+                        .frame(width: 8, height: 8)
+                    Text(motionManager.isActive ? "Sensors active" : "Tap Start to enable sensors")
+                        .font(.subheadline)
+                        .foregroundColor(motionManager.isActive ? .primary : .secondary)
+                }
+                .padding(.bottom, 4)
             }
-            .padding(.bottom, 4)
             
             Text("Orientation (Euler Angles)")
                 .font(.headline)
@@ -192,6 +206,7 @@ struct ContentView: View {
                 }
             }
             .font(.system(.body, design: .monospaced))
+            .id(refreshTick)
             
             Text("Translation (user acceleration)")
                 .font(.headline)
@@ -210,6 +225,7 @@ struct ContentView: View {
                 }
             }
             .font(.system(.body, design: .monospaced))
+            .id(refreshTick)
         }
         .padding()
         .background(Color.gray.opacity(0.1))
