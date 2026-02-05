@@ -41,6 +41,7 @@ interface PuppetProps {
     stringEnd: StringPositions
     puppet: StringPositions
   }) => void
+  stringRestLengths?: Map<string, number> // Optional overrides for string rest lengths
 }
 
 export default function Puppet({ 
@@ -49,7 +50,8 @@ export default function Puppet({
   controlBarPosition = { x: 0, y: 2.5, z: 0 },
   controlBarRotation = { roll: 0, pitch: 0, yaw: 0 },
   onStringPull, 
-  onPositionsChange 
+  onPositionsChange,
+  stringRestLengths
 }: PuppetProps) {
   const groupRef = useRef<THREE.Group>(null)
   const headRef = useRef<THREE.Group>(null)
@@ -154,7 +156,8 @@ export default function Puppet({
       const stringStates = calculateAllStringPhysics(
         controlBarPos,
         controlBarEuler,
-        puppetAttachmentPoints
+        puppetAttachmentPoints,
+        stringRestLengths
       )
 
       // Apply string forces to joints (forces propagate up hierarchy: head→torso, arms→shoulders→torso)
@@ -509,8 +512,8 @@ export default function Puppet({
           <mesh castShadow>
             <sphereGeometry args={[0.15, 16, 16]} />
             <meshStandardMaterial color="#fdbcb4" />
-          </mesh>
-        </group>
+        </mesh>
+      </group>
 
         {/* Left Arm (child of torso) with elbow joint */}
         <group ref={leftUpperArmRef} position={[-0.15, 0.1, 0]}>
@@ -534,15 +537,15 @@ export default function Puppet({
             {/* Forearm - cylinder extends horizontally (leftward along -X) */}
             <mesh position={[-0.09, 0, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
               <cylinderGeometry args={[0.025, 0.025, 0.18, 8]} />
-              <meshStandardMaterial color="#fdbcb4" />
-            </mesh>
-            {/* Hand */}
+          <meshStandardMaterial color="#fdbcb4" />
+        </mesh>
+        {/* Hand */}
             <mesh position={[-0.18, 0, 0]} castShadow>
-              <sphereGeometry args={[0.05, 8, 8]} />
-              <meshStandardMaterial color="#fdbcb4" />
-            </mesh>
+          <sphereGeometry args={[0.05, 8, 8]} />
+          <meshStandardMaterial color="#fdbcb4" />
+        </mesh>
           </group>
-        </group>
+      </group>
 
         {/* Right Arm (child of torso) with elbow joint */}
         <group ref={rightUpperArmRef} position={[0.15, 0.1, 0]}>
@@ -566,15 +569,15 @@ export default function Puppet({
             {/* Forearm - cylinder extends horizontally (rightward along +X) */}
             <mesh position={[0.09, 0, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
               <cylinderGeometry args={[0.025, 0.025, 0.18, 8]} />
-              <meshStandardMaterial color="#fdbcb4" />
-            </mesh>
-            {/* Hand */}
+          <meshStandardMaterial color="#fdbcb4" />
+        </mesh>
+        {/* Hand */}
             <mesh position={[0.18, 0, 0]} castShadow>
-              <sphereGeometry args={[0.05, 8, 8]} />
-              <meshStandardMaterial color="#fdbcb4" />
-            </mesh>
+          <sphereGeometry args={[0.05, 8, 8]} />
+          <meshStandardMaterial color="#fdbcb4" />
+        </mesh>
           </group>
-        </group>
+      </group>
 
         {/* Left Leg (child of torso) with knee joint */}
         <group ref={leftThighRef} position={[-0.1, -0.2, 0]}>
@@ -597,15 +600,15 @@ export default function Puppet({
             </mesh>
             <mesh position={[0, -0.1, 0]} castShadow>
               <cylinderGeometry args={[0.035, 0.035, 0.2, 8]} />
-              <meshStandardMaterial color="#2d3748" />
-            </mesh>
-            {/* Foot */}
-            <mesh position={[0, -0.2, 0.05]} castShadow>
-              <boxGeometry args={[0.08, 0.05, 0.15]} />
-              <meshStandardMaterial color="#1a202c" />
-            </mesh>
+          <meshStandardMaterial color="#2d3748" />
+        </mesh>
+        {/* Foot */}
+        <mesh position={[0, -0.2, 0.05]} castShadow>
+          <boxGeometry args={[0.08, 0.05, 0.15]} />
+          <meshStandardMaterial color="#1a202c" />
+        </mesh>
           </group>
-        </group>
+      </group>
 
         {/* Right Leg (child of torso) with knee joint */}
         <group ref={rightThighRef} position={[0.1, -0.2, 0]}>
@@ -628,13 +631,13 @@ export default function Puppet({
             </mesh>
             <mesh position={[0, -0.1, 0]} castShadow>
               <cylinderGeometry args={[0.035, 0.035, 0.2, 8]} />
-              <meshStandardMaterial color="#2d3748" />
-            </mesh>
-            {/* Foot */}
-            <mesh position={[0, -0.2, 0.05]} castShadow>
-              <boxGeometry args={[0.08, 0.05, 0.15]} />
-              <meshStandardMaterial color="#1a202c" />
-            </mesh>
+          <meshStandardMaterial color="#2d3748" />
+        </mesh>
+        {/* Foot */}
+        <mesh position={[0, -0.2, 0.05]} castShadow>
+          <boxGeometry args={[0.08, 0.05, 0.15]} />
+          <meshStandardMaterial color="#1a202c" />
+        </mesh>
           </group>
         </group>
       </group>

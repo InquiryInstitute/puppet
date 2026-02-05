@@ -301,12 +301,12 @@
             try {
                 showError(''); // Clear any previous errors
                 
-                // Request device: use OR of filters so we see the ad (scanner shows "MarionetteController")
+                // Request device with service filter
                 device = await navigator.bluetooth.requestDevice({
-                    filters: [
-                        { services: [SERVICE_UUID] },
-                        { namePrefix: 'Marionette' }
-                    ],
+                    filters: [{
+                        services: [SERVICE_UUID],
+                        namePrefix: 'MarionetteController'
+                    }],
                     optionalServices: [SERVICE_UUID]
                 });
                 

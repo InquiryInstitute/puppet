@@ -36,9 +36,10 @@ interface PuppetSceneProps {
     stringEnd: StringPositions
     puppet: StringPositions
   }) => void
+  onStringLengthStateChange?: (selectedIndex: number | null, restLengths: Map<string, number>) => void
 }
 
-export default function PuppetScene({ command, onControlBarStateChange, onStringPositionsChange }: PuppetSceneProps) {
+export default function PuppetScene({ command, onControlBarStateChange, onStringPositionsChange, onStringLengthStateChange }: PuppetSceneProps) {
   const { model, scene, step } = useMuJoCo()
   const { executeCommand, currentSequence, isProcessing } = useLLMController()
   const puppetRef = useRef<THREE.Group>(null)
@@ -64,6 +65,69 @@ export default function PuppetScene({ command, onControlBarStateChange, onString
     rotation: { roll: 0, pitch: 0, yaw: 0 },
   })
   const lastCommandRef = useRef<string>('')
+  
+  // String length adjustment state
+  const [selectedStringIndex, setSelectedStringIndex] = useState<number | null>(null)
+  const [stringRestLengths, setStringRestLengths] = useState<Map<string, number>>(new Map())
+  
+  // Map number keys (1-8) to string names
+  const STRING_NAMES = ['head', 'chest', 'leftHand', 'rightHand', 'leftShoulder', 'rightShoulder', 'leftFoot', 'rightFoot'] as const
+  const DEFAULT_REST_LENGTHS: Record<string, number> = {
+    head: 1.5,
+    chest: 1.4,
+    leftHand: 1.6,
+    rightHand: 1.6,
+    leftShoulder: 1.5,
+    rightShoulder: 1.5,
+    leftFoot: 1.8,
+    rightFoot: 1.8,
+  }
+  
+  // Keyboard handlers for string length adjustment
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Number keys 1-8: select string
+      if (e.key >= '1' && e.key <= '8') {
+        const index = parseInt(e.key) - 1
+        setSelectedStringIndex(index)
+        e.preventDefault()
+        return
+      }
+      
+      // +/- keys: adjust selected string length
+      if (selectedStringIndex !== null) {
+        const stringName = STRING_NAMES[selectedStringIndex]
+        if (!stringName) return
+        
+        const currentLength = stringRestLengths.get(stringName) ?? DEFAULT_REST_LENGTHS[stringName]
+        const adjustment = e.shiftKey ? 0.1 : 0.01 // Shift = larger steps
+        
+        if (e.key === '+' || e.key === '=') {
+          setStringRestLengths(prev => {
+            const next = new Map(prev)
+            next.set(stringName, Math.min(currentLength + adjustment, 5.0)) // Max 5m
+            return next
+          })
+          e.preventDefault()
+        } else if (e.key === '-' || e.key === '_') {
+          setStringRestLengths(prev => {
+            const next = new Map(prev)
+            next.set(stringName, Math.max(currentLength - adjustment, 0.1)) // Min 0.1m
+            return next
+          })
+          e.preventDefault()
+        }
+      }
+    }
+    
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [selectedStringIndex, stringRestLengths])
+  
+  // Notify parent of string length state changes
+  useEffect(() => {
+    onStringLengthStateChange?.(selectedStringIndex, stringRestLengths)
+  }, [selectedStringIndex, stringRestLengths, onStringLengthStateChange])
   
   // Create wood texture for stage
   const woodTexture = useMemo(() => createWoodTexture(), [])
@@ -203,6 +267,7 @@ export default function PuppetScene({ command, onControlBarStateChange, onString
           controlBarRotation={controlBarState.rotation}
           onStringPull={handleStringPull}
           onPositionsChange={onStringPositionsChange}
+          stringRestLengths={stringRestLengths}
         />
       </group>
     </>

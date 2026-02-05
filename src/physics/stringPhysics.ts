@@ -67,7 +67,8 @@ export function calculateAllStringPhysics(
     rightShoulder: THREE.Vector3
     leftFoot: THREE.Vector3
     rightFoot: THREE.Vector3
-  }
+  },
+  restLengthOverrides?: Map<string, number> // Optional overrides for rest lengths
 ): Map<string, StringState> {
   const results = new Map<string, StringState>()
   
@@ -90,13 +91,25 @@ export function calculateAllStringPhysics(
     back: controlBarLocalPoints.back.clone().applyQuaternion(controlBarQuat).add(controlBarPos),
   }
   
+  // Default rest lengths
+  const defaultRestLengths: Record<string, number> = {
+    head: 1.5,
+    chest: 1.4,
+    leftHand: 1.6,
+    rightHand: 1.6,
+    leftShoulder: 1.5,
+    rightShoulder: 1.5,
+    leftFoot: 1.8,
+    rightFoot: 1.8,
+  }
+
   // String configurations with rest lengths and stiffness (matching marionette.xml actuator settings)
   const stringConfigs: StringConfig[] = [
     {
       name: 'head',
       controlBarAttachment: controlBarWorldPoints.center,
       puppetAttachment: puppetAttachmentPoints.head,
-      restLength: 1.5, // Approximate rest length (control bar at y=2.5, head at y~1.0)
+      restLength: restLengthOverrides?.get('head') ?? defaultRestLengths.head,
       stiffness: 200, // kp from actuator
       damping: 5, // Damping coefficient
     },
@@ -104,7 +117,7 @@ export function calculateAllStringPhysics(
       name: 'chest',
       controlBarAttachment: controlBarWorldPoints.center,
       puppetAttachment: puppetAttachmentPoints.chest,
-      restLength: 1.4,
+      restLength: restLengthOverrides?.get('chest') ?? defaultRestLengths.chest,
       stiffness: 200,
       damping: 5,
     },
@@ -112,7 +125,7 @@ export function calculateAllStringPhysics(
       name: 'leftHand',
       controlBarAttachment: controlBarWorldPoints.left,
       puppetAttachment: puppetAttachmentPoints.leftHand,
-      restLength: 1.6,
+      restLength: restLengthOverrides?.get('leftHand') ?? defaultRestLengths.leftHand,
       stiffness: 200,
       damping: 4,
     },
@@ -120,7 +133,7 @@ export function calculateAllStringPhysics(
       name: 'rightHand',
       controlBarAttachment: controlBarWorldPoints.right,
       puppetAttachment: puppetAttachmentPoints.rightHand,
-      restLength: 1.6,
+      restLength: restLengthOverrides?.get('rightHand') ?? defaultRestLengths.rightHand,
       stiffness: 200,
       damping: 4,
     },
@@ -128,7 +141,7 @@ export function calculateAllStringPhysics(
       name: 'leftShoulder',
       controlBarAttachment: controlBarWorldPoints.front,
       puppetAttachment: puppetAttachmentPoints.leftShoulder,
-      restLength: 1.5,
+      restLength: restLengthOverrides?.get('leftShoulder') ?? defaultRestLengths.leftShoulder,
       stiffness: 150,
       damping: 4,
     },
@@ -136,7 +149,7 @@ export function calculateAllStringPhysics(
       name: 'rightShoulder',
       controlBarAttachment: controlBarWorldPoints.back,
       puppetAttachment: puppetAttachmentPoints.rightShoulder,
-      restLength: 1.5,
+      restLength: restLengthOverrides?.get('rightShoulder') ?? defaultRestLengths.rightShoulder,
       stiffness: 150,
       damping: 4,
     },
@@ -144,7 +157,7 @@ export function calculateAllStringPhysics(
       name: 'leftFoot',
       controlBarAttachment: controlBarWorldPoints.front,
       puppetAttachment: puppetAttachmentPoints.leftFoot,
-      restLength: 1.8,
+      restLength: restLengthOverrides?.get('leftFoot') ?? defaultRestLengths.leftFoot,
       stiffness: 250,
       damping: 6,
     },
@@ -152,7 +165,7 @@ export function calculateAllStringPhysics(
       name: 'rightFoot',
       controlBarAttachment: controlBarWorldPoints.back,
       puppetAttachment: puppetAttachmentPoints.rightFoot,
-      restLength: 1.8,
+      restLength: restLengthOverrides?.get('rightFoot') ?? defaultRestLengths.rightFoot,
       stiffness: 250,
       damping: 6,
     },

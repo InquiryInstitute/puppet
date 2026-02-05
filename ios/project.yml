@@ -1,0 +1,57 @@
+name: MarionetteController
+options:
+  bundleIdPrefix: com.inquiryinstitute
+  deploymentTarget:
+    iOS: "15.0"
+  developmentLanguage: en
+  xcodeVersion: "15.0"
+
+targets:
+  MarionetteController:
+    type: application
+    platform: iOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: MarionetteController
+    info:
+      path: MarionetteController/Info.plist
+      properties:
+        CFBundleDisplayName: Marionette Controller
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UIRequiredDeviceCapabilities:
+          - armv7
+          - arkit
+        NSBluetoothAlwaysUsageDescription: "This app uses Bluetooth to stream sensor data to the marionette simulation."
+        NSBluetoothPeripheralUsageDescription: "This app uses Bluetooth to stream sensor data to the marionette simulation."
+        NSCameraUsageDescription: "This app uses the camera for ARKit body tracking to capture your skeleton movements."
+        NSMotionUsageDescription: "This app uses motion sensors to detect device orientation and movement for marionette control."
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.inquiryinstitute.marionettecontroller
+        TARGETED_DEVICE_FAMILY: "1"
+        SWIFT_VERSION: "5.0"
+        IPHONEOS_DEPLOYMENT_TARGET: "15.0"
+        DEVELOPMENT_TEAM: ""
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.inquiryinstitute.marionettecontroller
+        TARGETED_DEVICE_FAMILY: "1"
+        SWIFT_VERSION: "5.0"
+        IPHONEOS_DEPLOYMENT_TARGET: "15.0"
+        DEVELOPMENT_TEAM: ""
+        OTHER_LDFLAGS: "-framework CoreMotion -framework CoreBluetooth -framework ARKit -framework RealityKit"
+
+schemes:
+  MarionetteController:
+    build:
+      targets:
+        MarionetteController: all
+    run:
+      config: Debug
+    archive:
+      config: Release

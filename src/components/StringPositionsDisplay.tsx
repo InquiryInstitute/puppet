@@ -22,6 +22,8 @@ interface StringPositionsDisplayProps {
   stringStartPositions?: StringPositions
   stringEndPositions?: StringPositions
   puppetPositions?: StringPositions
+  selectedStringIndex?: number | null
+  stringRestLengths?: Map<string, number>
 }
 
 const CONTROL_POINTS = [
@@ -35,16 +37,38 @@ const CONTROL_POINTS = [
   'rightFoot'
 ] as const
 
+// Default string rest lengths (constant - strings don't stretch, they just go slack)
+const DEFAULT_STRING_REST_LENGTHS: Record<string, number> = {
+  head: 1.5,
+  chest: 1.4,
+  leftHand: 1.6,
+  rightHand: 1.6,
+  leftShoulder: 1.5,
+  rightShoulder: 1.5,
+  leftFoot: 1.8,
+  rightFoot: 1.8,
+}
+
 const formatPosition = (pos: StringPosition | undefined): string => {
   if (!pos) return 'N/A'
   return `${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}, ${pos.z.toFixed(2)}`
+}
+
+const calculateDistance = (start: StringPosition | undefined, end: StringPosition | undefined): number => {
+  if (!start || !end) return 0
+  const dx = end.x - start.x
+  const dy = end.y - start.y
+  const dz = end.z - start.z
+  return Math.sqrt(dx * dx + dy * dy + dz * dz)
 }
 
 export default function StringPositionsDisplay({
   controllerPositions,
   stringStartPositions,
   stringEndPositions,
-  puppetPositions
+  puppetPositions,
+  selectedStringIndex = null,
+  stringRestLengths
 }: StringPositionsDisplayProps) {
   return (
     <div className="string-positions-display">
@@ -52,8 +76,11 @@ export default function StringPositionsDisplay({
         <thead>
           <tr>
             <th className="row-label">Position</th>
-            {CONTROL_POINTS.map(point => (
-              <th key={point} className="control-point-header">
+            {CONTROL_POINTS.map((point, index) => (
+              <th 
+                key={point} 
+                className={`control-point-header ${selectedStringIndex === index ? 'selected' : ''}`}
+              >
                 {point}
               </th>
             ))}
@@ -72,7 +99,15 @@ export default function StringPositionsDisplay({
             <td className="row-label">String Start</td>
             {CONTROL_POINTS.map(point => (
               <td key={point} className="position-cell">
-                {formatPosition(stringStartPositions?.[point])}
+                {formatPosition(stringEndPositions?.[point])}
+              </td>
+            ))}
+          </tr>
+          <tr>
+            <td className="row-label">String Length</td>
+            {CONTROL_POINTS.map(point => (
+              <td key={point} className="position-cell">
+                {calculateDistance(stringEndPositions?.[point], stringStartPositions?.[point]).toFixed(3)}m
               </td>
             ))}
           </tr>
@@ -80,7 +115,7 @@ export default function StringPositionsDisplay({
             <td className="row-label">String End</td>
             {CONTROL_POINTS.map(point => (
               <td key={point} className="position-cell">
-                {formatPosition(stringEndPositions?.[point])}
+                {formatPosition(stringStartPositions?.[point])}
               </td>
             ))}
           </tr>
