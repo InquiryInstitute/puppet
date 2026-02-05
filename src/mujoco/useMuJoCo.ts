@@ -72,6 +72,7 @@ export function useMuJoCo(): UseMuJoCoReturn {
     MjResetData?: (model: unknown, data: unknown) => void
     mj_step?: (model: unknown, data: unknown) => void
     MjStep?: (model: unknown, data: unknown) => void
+    mj_versionString?: () => string
     MEMFS?: unknown
   } | null>(null)
   const modelRef = useRef<{ nbody: number } | null>(null)
@@ -122,7 +123,12 @@ export function useMuJoCo(): UseMuJoCoReturn {
           qpos[6] = 0
         }
 
-        if (!cancelled) setIsLoaded(true)
+        if (!cancelled) {
+          const mjVersion = typeof mujoco.mj_versionString === 'function' ? mujoco.mj_versionString() : 'unknown'
+          const commit = typeof import.meta.env?.VITE_GIT_COMMIT === 'string' ? import.meta.env.VITE_GIT_COMMIT : 'unknown'
+          console.log('[MuJoCo] Running: model loaded, marionette.xml ready — MuJoCo', mjVersion, 'commit', commit)
+          setIsLoaded(true)
+        }
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : 'Failed to load MuJoCo')

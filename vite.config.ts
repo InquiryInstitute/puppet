@@ -1,7 +1,16 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { copyFileSync, mkdirSync, existsSync } from 'fs'
+import { execSync } from 'child_process'
 import { join } from 'path'
+
+function getGitCommit(): string {
+  try {
+    return execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).trim()
+  } catch {
+    return 'unknown'
+  }
+}
 
 // Copy index.html to route paths so /sim and /kleist are real files (no 404 → ?/path redirect)
 function copyHtmlToRoutes() {
@@ -46,5 +55,8 @@ export default defineConfig({
   },
   optimizeDeps: {
     exclude: ['mujoco-js']
+  },
+  define: {
+    'import.meta.env.VITE_GIT_COMMIT': JSON.stringify(getGitCommit())
   }
 })
