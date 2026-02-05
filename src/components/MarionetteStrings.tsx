@@ -375,12 +375,13 @@ export default function MarionetteStrings({
           .addVectors(config.start, config.end)
           .multiplyScalar(0.5)
         
-        // Add sag based on string length (longer strings sag more)
-        // Reduced sag to prevent stretching appearance
         const stringLength = config.start.distanceTo(config.end)
-        const sagAmount = Math.max(0.01, stringLength * 0.03) // 3% sag, minimum 1cm (reduced from 8%)
+        // When control bar is below puppet attachment (end.y < start.y), string is slack → heavy sag
+        const isSlack = config.end.y < config.start.y
+        const sagAmount = isSlack
+          ? Math.max(0.15, stringLength * 0.4) // 40% of length or 15cm min for loose hanging
+          : Math.max(0.01, stringLength * 0.03) // 3% when taut
         
-        // Sag downward (negative Y) to simulate gravity
         const controlPoint = midPoint.clone()
         controlPoint.y -= sagAmount
         

@@ -221,10 +221,12 @@ export default function MarionetteControl({
       const currentY = controlPosition.y
       const currentX = controlPosition.x
       
-      // String controls based on vertical position (0-1, where 1 is fully pulled)
-      // When control bar is higher, strings are more relaxed (lower value)
-      // When control bar is lower, strings are more pulled (higher value)
-      const verticalPull = Math.max(0, Math.min(1, (baseY - currentY) / 0.5))
+      // String controls: only pull when control bar is ABOVE the puppet reference.
+      // When control bar is at or below baseY (e.g. below ground), strings are slack → zero pull so joints flop.
+      const verticalPull =
+        currentY <= baseY
+          ? 0
+          : Math.max(0, Math.min(1, (currentY - baseY) / 0.5))
       
       // Horizontal position affects which side's strings are pulled
       // When control bar moves left (negative X), left side strings are pulled more

@@ -210,43 +210,20 @@ export default function Puppet({
       // Step physics simulation
       stepPuppetPhysics(physicsStateRef.current, physicsConfig, delta)
 
-      // Update visual puppet from physics state
-      if (headRef.current) {
-        headRef.current.rotation.copy(physicsStateRef.current.head.rotation)
-      }
-      if (torsoRef.current) {
-        torsoRef.current.rotation.copy(physicsStateRef.current.torso.rotation)
-      }
-      if (leftUpperArmRef.current) {
-        leftUpperArmRef.current.rotation.copy(physicsStateRef.current.leftShoulder.rotation)
-      }
-      if (rightUpperArmRef.current) {
-        rightUpperArmRef.current.rotation.copy(physicsStateRef.current.rightShoulder.rotation)
-      }
-      if (leftForearmRef.current) {
-        leftForearmRef.current.rotation.copy(physicsStateRef.current.leftElbow.rotation)
-      }
-      if (rightForearmRef.current) {
-        rightForearmRef.current.rotation.copy(physicsStateRef.current.rightElbow.rotation)
-      }
-      if (leftThighRef.current) {
-        leftThighRef.current.rotation.copy(physicsStateRef.current.leftHip.rotation)
-      }
-      if (rightThighRef.current) {
-        rightThighRef.current.rotation.copy(physicsStateRef.current.rightHip.rotation)
-      }
-      if (leftShinRef.current) {
-        leftShinRef.current.rotation.copy(physicsStateRef.current.leftKnee.rotation)
-      }
-      if (rightShinRef.current) {
-        rightShinRef.current.rotation.copy(physicsStateRef.current.rightKnee.rotation)
-      }
-
-      return // Skip kinematic control when using force-based physics
-    }
-
-    // Fallback to kinematic control if force-based physics is not enabled
-    // Apply gravity and string controls to puppet parts
+      // Apply physics joint rotations to the visible puppet so it bends instead of staying rigid
+      const ps = physicsStateRef.current
+      if (torsoRef.current) torsoRef.current.rotation.copy(ps.torso.rotation)
+      if (headRef.current) headRef.current.rotation.copy(ps.head.rotation)
+      if (leftUpperArmRef.current) leftUpperArmRef.current.rotation.copy(ps.leftShoulder.rotation)
+      if (rightUpperArmRef.current) rightUpperArmRef.current.rotation.copy(ps.rightShoulder.rotation)
+      if (leftForearmRef.current) leftForearmRef.current.rotation.copy(ps.leftElbow.rotation)
+      if (rightForearmRef.current) rightForearmRef.current.rotation.copy(ps.rightElbow.rotation)
+      if (leftThighRef.current) leftThighRef.current.rotation.copy(ps.leftHip.rotation)
+      if (rightThighRef.current) rightThighRef.current.rotation.copy(ps.rightHip.rotation)
+      if (leftShinRef.current) leftShinRef.current.rotation.copy(ps.leftKnee.rotation)
+      if (rightShinRef.current) rightShinRef.current.rotation.copy(ps.rightKnee.rotation)
+    } else {
+      // Kinematic mode: compute base position from gravity and string lift
 
     // Calculate total string pull (average of all active strings)
     const totalPull = stringControls ? (
@@ -352,10 +329,11 @@ export default function Puppet({
       puppetBaseYRef.current,
       puppetBaseZRef.current
     )
+    }
 
     if (!stringControls) return
 
-    // Head: pulled up by head string, or sagged by gravity
+    // Head: pulled up by head string, or sagged by gravity (flexible joints for both physics and kinematic)
     if (headRef.current && stringControls.head !== undefined) {
       const pull = stringControls.head
       // When pulled: lift head, when relaxed: let gravity sag it forward
