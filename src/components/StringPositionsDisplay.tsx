@@ -37,18 +37,6 @@ const CONTROL_POINTS = [
   'rightFoot'
 ] as const
 
-// Default string rest lengths (constant - strings don't stretch, they just go slack)
-const DEFAULT_STRING_REST_LENGTHS: Record<string, number> = {
-  head: 1.5,
-  chest: 1.4,
-  leftHand: 1.6,
-  rightHand: 1.6,
-  leftShoulder: 1.5,
-  rightShoulder: 1.5,
-  leftFoot: 1.8,
-  rightFoot: 1.8,
-}
-
 const formatPosition = (pos: StringPosition | undefined): string => {
   if (!pos) return 'N/A'
   return `${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}, ${pos.z.toFixed(2)}`
@@ -68,7 +56,6 @@ export default function StringPositionsDisplay({
   stringEndPositions,
   puppetPositions,
   selectedStringIndex = null,
-  stringRestLengths
 }: StringPositionsDisplayProps) {
   return (
     <div className="string-positions-display">
