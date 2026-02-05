@@ -376,43 +376,41 @@ export default function Puppet({
       torsoRef.current.rotation.x = 0.2 // Torso sags forward
     }
 
-    // Left Arm: pulled up by left hand string, or hangs naturally at rest
-    // With the arm rotated 90° around Z, X rotation raises/lowers, Y rotation swings forward/back
+    // Left Arm: pulled up by left hand string, or hangs down at rest (limb extends along -X, rotate to -Y)
     if (leftUpperArmRef.current && stringControls.leftHand !== undefined) {
       const pull = stringControls.leftHand
-      // When pulled: raise arm (rotate around Y axis to lift), when relaxed: hang straight down
-      leftUpperArmRef.current.rotation.y = -pull * 1.2 // Raise when pulled, 0 when relaxed (hangs straight down)
-      leftUpperArmRef.current.rotation.x = pull * 0.5 // Rotate arm outward when pulled
+      leftUpperArmRef.current.rotation.z = -Math.PI / 2 + pull * 1.0 // Rest: -90° (arm down); pulled: swing up
+      leftUpperArmRef.current.rotation.y = -pull * 0.6
+      leftUpperArmRef.current.rotation.x = pull * 0.3
     } else if (leftUpperArmRef.current) {
-      // Natural rest position - arm hangs straight down
-      leftUpperArmRef.current.rotation.y = 0 // Arm hangs straight down
+      leftUpperArmRef.current.rotation.z = -Math.PI / 2 // Arm hangs straight down
+      leftUpperArmRef.current.rotation.y = 0
       leftUpperArmRef.current.rotation.x = 0
     }
-    // Left Elbow: bends when arm is raised, or straightens when relaxed
+    // Left Elbow: visible bend at rest so joint is obvious
     if (leftForearmRef.current && stringControls.leftHand !== undefined) {
       const pull = stringControls.leftHand
-      leftForearmRef.current.rotation.y = -pull * 0.8 // Bend when pulled, 0 when relaxed (straight)
+      leftForearmRef.current.rotation.y = -pull * 0.8
     } else if (leftForearmRef.current) {
-      leftForearmRef.current.rotation.y = 0 // Straight when relaxed
+      leftForearmRef.current.rotation.y = 0.25 // Slight bend at rest so elbow is visible
     }
 
-    // Right Arm: pulled up by right hand string, or hangs naturally at rest
-    // With the arm rotated -90° around Z, X rotation raises/lowers, Y rotation swings forward/back
+    // Right Arm: mirror of left
     if (rightUpperArmRef.current && stringControls.rightHand !== undefined) {
       const pull = stringControls.rightHand
-      rightUpperArmRef.current.rotation.y = pull * 1.2 // Raise when pulled, 0 when relaxed (hangs straight down)
-      rightUpperArmRef.current.rotation.x = -pull * 0.5 // Rotate arm outward when pulled
+      rightUpperArmRef.current.rotation.z = Math.PI / 2 - pull * 1.0
+      rightUpperArmRef.current.rotation.y = pull * 0.6
+      rightUpperArmRef.current.rotation.x = -pull * 0.3
     } else if (rightUpperArmRef.current) {
-      // Natural rest position - arm hangs straight down
-      rightUpperArmRef.current.rotation.y = 0 // Arm hangs straight down
+      rightUpperArmRef.current.rotation.z = Math.PI / 2
+      rightUpperArmRef.current.rotation.y = 0
       rightUpperArmRef.current.rotation.x = 0
     }
-    // Right Elbow: bends when arm is raised, or straightens when relaxed
     if (rightForearmRef.current && stringControls.rightHand !== undefined) {
       const pull = stringControls.rightHand
-      rightForearmRef.current.rotation.y = pull * 0.8 // Bend when pulled, 0 when relaxed (straight)
+      rightForearmRef.current.rotation.y = pull * 0.8
     } else if (rightForearmRef.current) {
-      rightForearmRef.current.rotation.y = 0 // Straight when relaxed
+      rightForearmRef.current.rotation.y = -0.25
     }
 
     // Left Leg: pulled up by left foot string, or hangs down by gravity, or compresses when landing
@@ -439,10 +437,9 @@ export default function Puppet({
         const pull = stringControls.leftFoot
         kneeRotation = pull * 0.6 - (1 - pull) * 0.1 // Bend when pulled, slight bend when relaxed
       } else {
-        kneeRotation = -0.1 // Slight natural bend
+        kneeRotation = -0.25 // Visible bend at rest so knee joint is obvious
       }
-      // Add knee bending from ground collision (bend more when landing)
-      kneeRotation += kneeBendRef.current.left * 0.8 // Bend knee when foot hits ground
+      kneeRotation += kneeBendRef.current.left * 0.8
       leftShinRef.current.rotation.x = kneeRotation
     }
 
@@ -470,10 +467,9 @@ export default function Puppet({
         const pull = stringControls.rightFoot
         kneeRotation = pull * 0.6 - (1 - pull) * 0.1 // Bend when pulled, slight bend when relaxed
       } else {
-        kneeRotation = -0.1 // Slight natural bend
+        kneeRotation = -0.25 // Visible bend at rest so knee joint is obvious
       }
-      // Add knee bending from ground collision (bend more when landing)
-      kneeRotation += kneeBendRef.current.right * 0.8 // Bend knee when foot hits ground
+      kneeRotation += kneeBendRef.current.right * 0.8
       rightShinRef.current.rotation.x = kneeRotation
     }
   })

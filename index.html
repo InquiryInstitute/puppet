@@ -6,20 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Puppet - LLM-Driven Marionettes</title>
     <script>
-      // Handle GitHub Pages redirect immediately, before React loads
-      // This fixes URLs like /?/sim back to /sim
+      // Handle GitHub Pages 404 redirect: fix ?/sim back to /sim (or /puppet/sim when under /puppet/)
       (function() {
-        const queryParams = new URLSearchParams(window.location.search);
-        const redirectPath = queryParams.get('/');
-        if (redirectPath) {
-          // Convert the redirect path back to a normal path
-          let path = redirectPath.replace(/~and~/g, '&').replace(/~slash~/g, '/');
-          if (!path.startsWith('/')) {
-            path = '/' + path;
-          }
-          // Replace URL immediately, before React Router loads
-          window.history.replaceState({}, '', path + window.location.hash);
-        }
+        const search = window.location.search;
+        // 404.html redirects to ?/path (search is "/sim" or "/path&other=params"); take path only
+        if (!search || search.length < 2 || search.charAt(1) !== '/') return;
+        const redirectPath = search.slice(1).split('&')[0];
+        let path = redirectPath.replace(/~and~/g, '&').replace(/~slash~/g, '/');
+        if (!path.startsWith('/')) path = '/' + path;
+        // Preserve base path so we get /puppet/sim not /sim when served from /puppet/
+        const base = window.location.pathname.split('/').filter(Boolean)[0] === 'puppet' ? '/puppet' : '';
+        const fullPath = base + path + window.location.hash;
+        window.history.replaceState({}, '', fullPath);
       })();
     </script>
   </head>
