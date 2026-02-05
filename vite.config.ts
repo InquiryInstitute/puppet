@@ -45,6 +45,6 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    exclude: ['mujoco']
+    exclude: ['mujoco-js']
   }
 })

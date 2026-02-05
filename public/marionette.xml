@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mujoco model="marionette">
+  <compiler angle="degree" coordinate="local"/>
+  <option timestep="0.002" gravity="0 0 -9.81" solver="Newton" iterations="50"/>
+  <size njmax="500" nconmax="200"/>
+  <default>
+    <geom friction="0.8 0.1 0.1" density="400" rgba="0.8 0.7 0.5 1"/>
+    <joint damping="1" armature="0.01"/>
+    <site size="0.005" rgba="0.2 0.8 1 1"/>
+  </default>
+
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" width="256" height="256"
+             rgb1="0.2 0.2 0.2" rgb2="0.3 0.3 0.3"/>
+    <material name="gridmat" texture="grid" texrepeat="8 8" reflectance="0.0"/>
+  </asset>
+
+  <worldbody>
+    <geom name="floor" type="plane" pos="0 0 0" size="5 5 0.1" material="gridmat" rgba="1 1 1 1"/>
+
+    <!-- =========================
+         HANDLE (crossbar + stem)
+         ========================= -->
+    <body name="handle" pos="0 0 1.6">
+      <joint name="handle_free" type="free"/>
+
+      <!-- crossbar -->
+      <geom name="crossbar" type="capsule" fromto="-0.18 0 0   0.18 0 0" size="0.01" rgba="0.3 0.3 0.3 1"/>
+      <!-- stem -->
+      <geom name="stem" type="capsule" fromto="0 0 0   0 0 -0.20" size="0.008" rgba="0.25 0.25 0.25 1"/>
+
+      <!-- handle string attachment sites -->
+      <site name="h_left"  pos="-0.18  0.00 0.00"/>
+      <site name="h_right" pos=" 0.18  0.00 0.00"/>
+      <site name="h_front" pos=" 0.00  0.06 0.00"/>
+      <site name="h_back"  pos=" 0.00 -0.06 0.00"/>
+      <site name="h_center" pos="0 0 -0.20"/>
+
+      <!-- =========================
+           PUPPET BODY (hanging below)
+           ========================= -->
+      <body name="puppet" pos="0 0 1.15">
+        <joint name="puppet_free" type="free"/>
+
+        <!-- torso -->
+        <body name="torso" pos="0 0 0">
+          <geom name="torso" type="capsule" fromto="0 0 0.10   0 0 -0.12" size="0.045"/>
+          <site name="p_chest" pos="0 0 0.05"/>
+          <site name="p_hips"  pos="0 0 -0.10"/>
+
+          <!-- head -->
+          <body name="head" pos="0 0 0.16">
+            <joint name="neck" type="ball" damping="0.5"/>
+            <geom name="head_geom" type="sphere" size="0.05" pos="0 0 0.05" rgba="0.85 0.75 0.55 1"/>
+            <site name="p_head_top" pos="0 0 0.11"/>
+          </body>
+
+          <!-- left arm - connected to torso at shoulder -->
+          <body name="l_upperarm" pos="-0.045 0 0.06">
+            <joint name="l_shoulder" type="ball" damping="0.8" pos="0 0 0"/>
+            <geom name="l_upperarm_geom" type="capsule" fromto="0 0 0   -0.12 0 0" size="0.02" rgba="0.85 0.75 0.55 1"/>
+            <site name="p_l_shoulder" pos="0 0 0"/>
+            <body name="l_forearm" pos="-0.12 0 0">
+              <joint name="l_elbow" type="hinge" axis="0 1 0" damping="0.4" range="-120 0"/>
+              <geom name="l_forearm_geom" type="capsule" fromto="0 0 0   -0.12 0 0" size="0.018" rgba="0.85 0.75 0.55 1"/>
+              <site name="p_l_hand" pos="-0.12 0 0"/>
+            </body>
+          </body>
+
+          <!-- right arm - connected to torso at shoulder -->
+          <body name="r_upperarm" pos="0.045 0 0.06">
+            <joint name="r_shoulder" type="ball" damping="0.8" pos="0 0 0"/>
+            <geom name="r_upperarm_geom" type="capsule" fromto="0 0 0   0.12 0 0" size="0.02" rgba="0.85 0.75 0.55 1"/>
+            <site name="p_r_shoulder" pos="0 0 0"/>
+            <body name="r_forearm" pos="0.12 0 0">
+              <joint name="r_elbow" type="hinge" axis="0 1 0" damping="0.4" range="-120 0"/>
+              <geom name="r_forearm_geom" type="capsule" fromto="0 0 0   0.12 0 0" size="0.018" rgba="0.85 0.75 0.55 1"/>
+              <site name="p_r_hand" pos="0.12 0 0"/>
+            </body>
+          </body>
+        </body>
+
+        <!-- left leg -->
+        <body name="l_thigh" pos="0 0 -0.12">
+          <joint name="l_hip" type="ball" damping="1.0" pos="0 0 0"/>
+          <geom name="l_thigh_geom" type="capsule" fromto="0 0 0   -0.04 0 -0.18" size="0.025"/>
+          <body name="l_shin" pos="-0.04 0 -0.18">
+            <joint name="l_knee" type="hinge" axis="1 0 0" damping="0.6" range="-5 130"/>
+            <geom name="l_shin_geom" type="capsule" fromto="0 0 0   0 0 -0.18" size="0.022"/>
+            <site name="p_l_foot" pos="0 0 -0.18"/>
+          </body>
+        </body>
+
+        <!-- right leg -->
+        <body name="r_thigh" pos="0 0 -0.12">
+          <joint name="r_hip" type="ball" damping="1.0" pos="0 0 0"/>
+          <geom name="r_thigh_geom" type="capsule" fromto="0 0 0   0.04 0 -0.18" size="0.025"/>
+          <body name="r_shin" pos="0.04 0 -0.18">
+            <joint name="r_knee" type="hinge" axis="1 0 0" damping="0.6" range="-5 130"/>
+            <geom name="r_shin_geom" type="capsule" fromto="0 0 0   0 0 -0.18" size="0.022"/>
+            <site name="p_r_foot" pos="0 0 -0.18"/>
+          </body>
+        </body>
+
+      </body>
+    </body>
+  </worldbody>
+
+  <!-- =========================
+       STRINGS AS CABLE TENDONS
+       =========================
+       Each tendon is a "string" from a handle site to a puppet site.
+       Actuating it shortens/lengthens the cable (reeling in/out).
+  -->
+  <tendon>
+    <!-- head + torso -->
+    <spatial name="t_head" width="0.002">
+      <site site="h_center"/>
+      <site site="p_head_top"/>
+    </spatial>
+    <spatial name="t_chest" width="0.002">
+      <site site="h_center"/>
+      <site site="p_chest"/>
+    </spatial>
+
+    <!-- hands -->
+    <spatial name="t_l_hand" width="0.002">
+      <site site="h_left"/>
+      <site site="p_l_hand"/>
+    </spatial>
+    <spatial name="t_r_hand" width="0.002">
+      <site site="h_right"/>
+      <site site="p_r_hand"/>
+    </spatial>
+
+    <!-- shoulders (stabilize upper body) -->
+    <spatial name="t_l_shoulder" width="0.002">
+      <site site="h_front"/>
+      <site site="p_l_shoulder"/>
+    </spatial>
+    <spatial name="t_r_shoulder" width="0.002">
+      <site site="h_back"/>
+      <site site="p_r_shoulder"/>
+    </spatial>
+
+    <!-- feet -->
+    <spatial name="t_l_foot" width="0.002">
+      <site site="h_front"/>
+      <site site="p_l_foot"/>
+    </spatial>
+    <spatial name="t_r_foot" width="0.002">
+      <site site="h_back"/>
+      <site site="p_r_foot"/>
+    </spatial>
+  </tendon>
+
+  <!-- Make tendons behave like strings: stiff in tension via tendon stiffness,
+       with some damping and a little "give". -->
+  <option>
+    <!-- (keeping default global settings above) -->
+  </option>
+
+  <actuator>
+    <!-- Position actuators drive tendon length.
+         ctrl increases/decreases tendon length by "gear" scaling. -->
+    <position name="a_head"    tendon="t_head"    kp="200" gear="0.05"/>
+    <position name="a_chest"   tendon="t_chest"   kp="200" gear="0.05"/>
+
+    <position name="a_l_hand"  tendon="t_l_hand"  kp="200" gear="0.08"/>
+    <position name="a_r_hand"  tendon="t_r_hand"  kp="200" gear="0.08"/>
+
+    <position name="a_l_sh"    tendon="t_l_shoulder" kp="150" gear="0.06"/>
+    <position name="a_r_sh"    tendon="t_r_shoulder" kp="150" gear="0.06"/>
+
+    <position name="a_l_foot"  tendon="t_l_foot"  kp="250" gear="0.08"/>
+    <position name="a_r_foot"  tendon="t_r_foot"  kp="250" gear="0.08"/>
+  </actuator>
+</mujoco>

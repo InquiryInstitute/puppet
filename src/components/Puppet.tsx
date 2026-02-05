@@ -1,7 +1,8 @@
-import { useRef } from 'react'
+import React, { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import MarionetteStrings from './MarionetteStrings'
+import type { UseMuJoCoReturn } from '../mujoco/useMuJoCo'
 import { calculateAllStringPhysics } from '../physics/stringPhysics'
 import { initializePuppetPhysics, createDefaultJointConfigs, applyStringForcesToJoints, applyGravity, stepPuppetPhysics, PuppetPhysicsState } from '../physics/puppetPhysics'
 
@@ -23,6 +24,7 @@ interface StringPositions {
 }
 
 interface PuppetProps {
+  mujoco?: UseMuJoCoReturn | null
   stringControls?: {
     head?: number
     leftHand?: number
@@ -49,6 +51,7 @@ interface PuppetProps {
 }
 
 export default function Puppet({ 
+  mujoco,
   stringControls, 
   controlBarRef, 
   controlBarPosition = { x: 0, y: 2.5, z: 0 },
@@ -92,9 +95,55 @@ export default function Puppet({
 
   // Puppet parts are controlled by force-based physics from string tensions
 
-  // Force-based physics: calculate string tensions and apply forces to joints
+  // MuJoCo physics (when loaded) or force-based physics
   useFrame((_, delta) => {
     if (!groupRef.current) return
+
+    // MuJoCo path: drive puppet from MuJoCo simulation
+    if (mujoco?.isLoaded) {
+      const dt = Math.min(delta, 0.05)
+      mujoco.setHandlePosition(new THREE.Vector3(controlBarPosition.x, controlBarPosition.y, controlBarPosition.z))
+      mujoco.setActuators({
+        head: stringControls?.head,
+        chest: stringControls?.torso,
+        leftHand: stringControls?.leftHand,
+        rightHand: stringControls?.rightHand,
+        leftShoulder: stringControls?.leftHand,
+        rightShoulder: stringControls?.rightHand,
+        leftFoot: stringControls?.leftFoot,
+        rightFoot: stringControls?.rightFoot,
+      })
+      mujoco.step(dt)
+      const rootPose = mujoco.getBodyPose('puppet')
+      if (!rootPose) return
+      const rootPos = rootPose.position
+      const rootQuat = rootPose.quaternion
+      groupRef.current.position.copy(rootPos)
+      groupRef.current.quaternion.copy(rootQuat)
+      const invRootQuat = rootQuat.clone().invert()
+      const bodyRefMap: [string, React.RefObject<THREE.Group>][] = [
+        ['head', headRef],
+        ['torso', torsoRef],
+        ['l_upperarm', leftUpperArmRef],
+        ['l_forearm', leftForearmRef],
+        ['r_upperarm', rightUpperArmRef],
+        ['r_forearm', rightForearmRef],
+        ['l_thigh', leftThighRef],
+        ['l_shin', leftShinRef],
+        ['r_thigh', rightThighRef],
+        ['r_shin', rightShinRef],
+      ]
+      for (const [bodyName, ref] of bodyRefMap) {
+        const pose = mujoco.getBodyPose(bodyName)
+        const g = ref.current
+        if (!pose || !g) continue
+        const localPos = pose.position.clone().sub(rootPos).applyQuaternion(invRootQuat)
+        const localQuat = invRootQuat.clone().multiply(pose.quaternion)
+        g.position.copy(localPos)
+        g.quaternion.copy(localQuat)
+      }
+      return
+    }
 
     // Use force-based physics if control bar state is provided
     if (useForceBasedPhysics && controlBarPosition && controlBarRotation) {

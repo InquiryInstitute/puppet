@@ -41,7 +41,7 @@ interface PuppetSceneProps {
 }
 
 export default function PuppetScene({ command, onControlBarStateChange, onStringPositionsChange, onForcesTorquesChange, onStringLengthStateChange }: PuppetSceneProps) {
-  const { model, scene, step } = useMuJoCo()
+  const mujoco = useMuJoCo()
   const { executeCommand, currentSequence, isProcessing } = useLLMController()
   const puppetRef = useRef<THREE.Group>(null)
   const controlBarRef = useRef<THREE.Group>(null)
@@ -186,15 +186,8 @@ export default function PuppetScene({ command, onControlBarStateChange, onString
     }
   }, [currentSequence])
 
-  // Update puppet based on MuJoCo simulation
+  // Initialize sequence start time on first frame after sequence is set
   useFrame((state) => {
-    if (model && scene && puppetRef.current) {
-      step()
-      // Update puppet position/rotation from MuJoCo state
-      // This will be implemented based on MuJoCo API
-    }
-
-    // Initialize sequence start time on first frame after sequence is set
     if (currentSequence && sequenceStartTime === null) {
       setSequenceStartTime(state.clock.elapsedTime)
     }
@@ -260,8 +253,9 @@ export default function PuppetScene({ command, onControlBarStateChange, onString
           sequenceStartTime={sequenceStartTime ?? undefined}
         />
         
-        {/* Puppet - force-based physics driven by string tensions */}
+        {/* Puppet - MuJoCo physics when loaded, else force-based physics */}
         <Puppet 
+          mujoco={mujoco}
           stringControls={stringControls}
           controlBarRef={controlBarRef}
           controlBarPosition={controlBarState.position}
