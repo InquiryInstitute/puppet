@@ -39,6 +39,18 @@ const CONTROL_POINTS = [
   'rightFoot'
 ] as const
 
+/** Default rest lengths (m) when not overridden; used so "String Length" row is constant. */
+const DEFAULT_REST_LENGTHS: Record<string, number> = {
+  head: 1.5,
+  chest: 1.4,
+  leftHand: 1.6,
+  rightHand: 1.6,
+  leftShoulder: 1.5,
+  rightShoulder: 1.5,
+  leftFoot: 1.8,
+  rightFoot: 1.8,
+}
+
 const formatPosition = (pos: StringPosition | undefined): string => {
   if (!pos) return 'N/A'
   return `${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}, ${pos.z.toFixed(2)}`
@@ -76,6 +88,7 @@ export default function StringPositionsDisplay({
   forces,
   torques,
   selectedStringIndex = null,
+  stringRestLengths,
 }: StringPositionsDisplayProps) {
   return (
     <div className="string-positions-display">
@@ -113,8 +126,8 @@ export default function StringPositionsDisplay({
           <tr>
             <td className="row-label">String Length</td>
             {CONTROL_POINTS.map(point => (
-              <td key={point} className="position-cell">
-                {calculateDistance(stringEndPositions?.[point], stringStartPositions?.[point]).toFixed(3)}m
+              <td key={point} className="position-cell" title="Rest length (constant)">
+                {(stringRestLengths?.get(point) ?? DEFAULT_REST_LENGTHS[point] ?? 0).toFixed(3)}m
               </td>
             ))}
           </tr>

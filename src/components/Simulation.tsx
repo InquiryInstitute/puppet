@@ -47,6 +47,18 @@ export default function Simulation() {
     torques?: StringPositions
   }>({})
 
+  const [timing, setTiming] = useState<{
+    simTime: number
+    realTime: number
+    fps: number
+    realtimeRatio: number
+  } | null>(null)
+
+  const [stringLengthState, setStringLengthState] = useState<{
+    selectedIndex: number | null
+    restLengths: Map<string, number>
+  }>({ selectedIndex: null, restLengths: new Map() })
+
   return (
     <div className="app">
       <ControlBarDisplay 
@@ -54,6 +66,7 @@ export default function Simulation() {
         controlBarRotation={controlBarState.rotation}
         cameraPosition={cameraState?.position}
         cameraRotation={cameraState?.rotation}
+        timing={timing}
       />
       <StringPositionsDisplay
         controllerPositions={stringPositions.controller}
@@ -62,6 +75,8 @@ export default function Simulation() {
         puppetPositions={stringPositions.puppet}
         forces={forcesTorques.forces}
         torques={forcesTorques.torques}
+        selectedStringIndex={stringLengthState.selectedIndex}
+        stringRestLengths={stringLengthState.restLengths}
       />
       <div className="canvas-container">
         <Canvas shadows>
@@ -89,6 +104,10 @@ export default function Simulation() {
               puppet: positions.puppet
             })}
             onForcesTorquesChange={(data) => setForcesTorques({ forces: data.forces, torques: data.torques })}
+            onTimingUpdate={setTiming}
+            onStringLengthStateChange={(selectedIndex, restLengths) =>
+              setStringLengthState({ selectedIndex, restLengths })
+            }
           />
           <CameraTracker 
             onCameraStateChange={(pos, rot) => setCameraState({ position: pos, rotation: rot })}

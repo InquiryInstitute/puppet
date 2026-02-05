@@ -369,47 +369,16 @@ export default function MarionetteStrings({
     const lines = stringConfigs
       .filter(config => config.visible !== false)
       .map((config) => {
-        // Create flexible curved string using quadratic bezier curve
-        // Control point creates the sag/curve in the string
+        // Straight string: two points only (no flex/sag)
+        const pointsArray: [number, number, number][] = [
+          [config.start.x, config.start.y, config.start.z],
+          [config.end.x, config.end.y, config.end.z],
+        ]
         const midPoint = new THREE.Vector3()
           .addVectors(config.start, config.end)
           .multiplyScalar(0.5)
-        
-        const stringLength = config.start.distanceTo(config.end)
-        // When control bar is below puppet attachment (end.y < start.y), string is slack → heavy sag
-        const isSlack = config.end.y < config.start.y
-        const sagAmount = isSlack
-          ? Math.max(0.15, stringLength * 0.4) // 40% of length or 15cm min for loose hanging
-          : Math.max(0.01, stringLength * 0.03) // 3% when taut
-        
-        const controlPoint = midPoint.clone()
-        controlPoint.y -= sagAmount
-        
-        // Create curve with multiple points for smooth flexible appearance
-        // Ensure curve starts and ends exactly at attachment points
-        const curve = new THREE.QuadraticBezierCurve3(
-          config.start.clone(), // Explicit clone to ensure exact position
-          controlPoint,
-          config.end.clone() // Explicit clone to ensure exact position
-        )
-        
-        // Generate points along the curve, ensuring first and last points are exact
-        const curvePoints = curve.getPoints(30)
-        // Ensure first point is exactly at start
-        curvePoints[0].copy(config.start)
-        // Ensure last point is exactly at end
-        curvePoints[curvePoints.length - 1].copy(config.end)
-        
-        // Convert Vector3 points to [x, y, z] arrays for Line component
-        const pointsArray = curvePoints.map(p => [p.x, p.y, p.z] as [number, number, number])
-        
-        // Create interactive hitboxes at key points along the string
-        const hitboxPoints = [
-          curvePoints[Math.floor(curvePoints.length * 0.25)],
-          curvePoints[Math.floor(curvePoints.length * 0.5)],
-          curvePoints[Math.floor(curvePoints.length * 0.75)],
-        ]
-        
+        const hitboxPoints = [midPoint]
+
       return (
           <group key={config.name}>
         <Line

@@ -52,6 +52,7 @@ export interface UseMuJoCoReturn {
   isLoaded: boolean
   error: string | null
   step: (dt?: number) => void
+  getSimTime: () => number
   setHandlePosition: (threePos: THREE.Vector3) => void
   setActuators: (controls: MuJoCoActuatorControls) => void
   getBodyPose: (bodyName: string) => MuJoCoBodyPose | null
@@ -74,6 +75,7 @@ export function useMuJoCo(): UseMuJoCoReturn {
   } | null>(null)
   const modelRef = useRef<{ nbody: number } | null>(null)
   const dataRef = useRef<{ qpos: Float32Array; ctrl?: Float32Array; xpos: Float32Array; xquat: Float32Array } | null>(null)
+  const simTimeRef = useRef(0)
 
   useEffect(() => {
     let cancelled = false
@@ -126,8 +128,9 @@ export function useMuJoCo(): UseMuJoCoReturn {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to load MuJoCo')
-          console.error('MuJoCo init error:', err)
+          const msg = err instanceof Error ? err.message : String(err)
+          setError(msg)
+          console.error('MuJoCo init error:', msg, err)
         }
       }
     }
@@ -146,7 +149,10 @@ export function useMuJoCo(): UseMuJoCoReturn {
       if (mj.mj_step) mj.mj_step(model, data)
       else if (mj.MjStep) mj.MjStep(model, data)
     }
+    simTimeRef.current += stepSize * n
   }, [])
+
+  const getSimTime = useCallback(() => simTimeRef.current, [])
 
   const setHandlePosition = useCallback((threePos: THREE.Vector3) => {
     const data = dataRef.current
@@ -216,6 +222,7 @@ export function useMuJoCo(): UseMuJoCoReturn {
     isLoaded,
     error,
     step,
+    getSimTime,
     setHandlePosition,
     setActuators,
     getBodyPose,

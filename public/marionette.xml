@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mujoco model="marionette">
-  <compiler angle="degree" coordinate="local"/>
+  <compiler angle="degree" coordinate="local">
+    <!-- Disable automatic actuator length-range computation (can fail in WASM) -->
+    <lengthrange mode="none"/>
+  </compiler>
   <option timestep="0.002" gravity="0 0 -9.81" solver="Newton" iterations="50"/>
   <size njmax="500" nconmax="200"/>
   <default>
@@ -154,25 +157,18 @@
     </spatial>
   </tendon>
 
-  <!-- Make tendons behave like strings: stiff in tension via tendon stiffness,
-       with some damping and a little "give". -->
-  <option>
-    <!-- (keeping default global settings above) -->
-  </option>
-
   <actuator>
-    <!-- Position actuators drive tendon length.
-         ctrl increases/decreases tendon length by "gear" scaling. -->
-    <position name="a_head"    tendon="t_head"    kp="200" gear="0.05"/>
-    <position name="a_chest"   tendon="t_chest"   kp="200" gear="0.05"/>
+    <!-- Position actuators drive tendon length; lengthrange required when compiler lengthrange mode=none. -->
+    <position name="a_head"    tendon="t_head"    kp="200" gear="0.05" lengthrange="0.2 2.5"/>
+    <position name="a_chest"   tendon="t_chest"   kp="200" gear="0.05" lengthrange="0.2 2.5"/>
 
-    <position name="a_l_hand"  tendon="t_l_hand"  kp="200" gear="0.08"/>
-    <position name="a_r_hand"  tendon="t_r_hand"  kp="200" gear="0.08"/>
+    <position name="a_l_hand"  tendon="t_l_hand"  kp="200" gear="0.08" lengthrange="0.2 2.5"/>
+    <position name="a_r_hand"  tendon="t_r_hand"  kp="200" gear="0.08" lengthrange="0.2 2.5"/>
 
-    <position name="a_l_sh"    tendon="t_l_shoulder" kp="150" gear="0.06"/>
-    <position name="a_r_sh"    tendon="t_r_shoulder" kp="150" gear="0.06"/>
+    <position name="a_l_sh"    tendon="t_l_shoulder" kp="150" gear="0.06" lengthrange="0.2 2.5"/>
+    <position name="a_r_sh"    tendon="t_r_shoulder" kp="150" gear="0.06" lengthrange="0.2 2.5"/>
 
-    <position name="a_l_foot"  tendon="t_l_foot"  kp="250" gear="0.08"/>
-    <position name="a_r_foot"  tendon="t_r_foot"  kp="250" gear="0.08"/>
+    <position name="a_l_foot"  tendon="t_l_foot"  kp="250" gear="0.08" lengthrange="0.2 2.5"/>
+    <position name="a_r_foot"  tendon="t_r_foot"  kp="250" gear="0.08" lengthrange="0.2 2.5"/>
   </actuator>
 </mujoco>

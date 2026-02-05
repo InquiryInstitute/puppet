@@ -26,6 +26,13 @@ interface StringPositions {
   rightFoot?: StringPosition
 }
 
+export interface TimingSnapshot {
+  simTime: number
+  realTime: number
+  fps: number
+  realtimeRatio: number
+}
+
 interface PuppetSceneProps {
   command: string
   isExecuting: boolean
@@ -38,10 +45,17 @@ interface PuppetSceneProps {
   }) => void
   onForcesTorquesChange?: (data: { forces: StringPositions; torques: StringPositions }) => void
   onStringLengthStateChange?: (selectedIndex: number | null, restLengths: Map<string, number>) => void
+  onTimingUpdate?: (timing: TimingSnapshot) => void
 }
 
-export default function PuppetScene({ command, onControlBarStateChange, onStringPositionsChange, onForcesTorquesChange, onStringLengthStateChange }: PuppetSceneProps) {
+const TIMING_UPDATE_INTERVAL_MS = 250
+
+export default function PuppetScene({ command, onControlBarStateChange, onStringPositionsChange, onForcesTorquesChange, onStringLengthStateChange, onTimingUpdate }: PuppetSceneProps) {
   const mujoco = useMuJoCo()
+  const startTimeRef = useRef<number | null>(null)
+  const lastFpsTimeRef = useRef(0)
+  const frameCountRef = useRef(0)
+  const lastTimingUpdateRef = useRef(0)
   const { executeCommand, currentSequence, isProcessing } = useLLMController()
   const puppetRef = useRef<THREE.Group>(null)
   const controlBarRef = useRef<THREE.Group>(null)
@@ -191,6 +205,32 @@ export default function PuppetScene({ command, onControlBarStateChange, onString
     if (currentSequence && sequenceStartTime === null) {
       setSequenceStartTime(state.clock.elapsedTime)
     }
+  })
+
+  // Timing: real time, FPS, sim time, realtime ratio (throttled updates)
+  useFrame(() => {
+    const now = performance.now()
+    if (startTimeRef.current === null) startTimeRef.current = now
+    frameCountRef.current += 1
+
+    if (!onTimingUpdate || now - lastTimingUpdateRef.current < TIMING_UPDATE_INTERVAL_MS) return
+
+    lastTimingUpdateRef.current = now
+    const realTimeSec = (now - startTimeRef.current) / 1000
+    const elapsedSinceFps = (now - lastFpsTimeRef.current) / 1000
+    lastFpsTimeRef.current = now
+    const fps = elapsedSinceFps > 0 ? frameCountRef.current / elapsedSinceFps : 0
+    frameCountRef.current = 0
+
+    const simTime = mujoco?.getSimTime?.() ?? 0
+    const realtimeRatio = realTimeSec > 0 ? simTime / realTimeSec : 0
+
+    onTimingUpdate({
+      simTime,
+      realTime: realTimeSec,
+      fps,
+      realtimeRatio,
+    })
   })
 
   return (
